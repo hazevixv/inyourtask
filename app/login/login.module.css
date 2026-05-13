@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 18% 18%, rgba(124, 58, 237, 0.18), transparent 22%),
+    radial-gradient(circle at 18% 18%, rgba(74,123,165, 0.18), transparent 22%),
     radial-gradient(circle at 82% 20%, rgba(34, 197, 94, 0.12), transparent 20%),
     linear-gradient(135deg, #09111f 0%, #111b38 35%, #1d2b5a 100%);
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -54,7 +54,7 @@
   padding: 8px 12px;
   border-radius: 999px;
   background: rgba(255,255,255,0.08);
-  color: #c4b5fd;
+  color: #a8cce5;
   border: 1px solid rgba(255,255,255,0.12);
   font-size: 12px;
   font-weight: 800;
@@ -130,8 +130,8 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #22c55e);
-  box-shadow: 0 0 0 4px rgba(124,58,237,0.15);
+  background: linear-gradient(135deg, #4a7ba5, #22c55e);
+  box-shadow: 0 0 0 4px rgba(74,123,165,0.15);
 }
 
 .card {
@@ -242,14 +242,14 @@
 }
 
 .input:focus {
-  border-color: #7c3aed;
+  border-color: #4a7ba5;
   background: white;
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 0 0 4px rgba(74,123,165, 0.12);
 }
 
 .input:focus + .inputIcon,
 .inputWrapper:focus-within .inputIcon {
-  color: #7c3aed;
+  color: #4a7ba5;
 }
 
 .error {
@@ -274,7 +274,7 @@
 .signInBtn {
   width: 100%;
   padding: 15px 24px;
-  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 48%, #22c55e 140%);
+  background: linear-gradient(135deg, #2563eb 0%, #4a7ba5 48%, #22c55e 140%);
   color: white;
   border: none;
   border-radius: 14px;
@@ -288,12 +288,12 @@
   justify-content: center;
   gap: 8px;
   margin-top: 8px;
-  box-shadow: 0 16px 30px rgba(59,130,246,0.22), 0 8px 18px rgba(124,58,237,0.18);
+  box-shadow: 0 16px 30px rgba(59,130,246,0.22), 0 8px 18px rgba(74,123,165,0.18);
 }
 
 .signInBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 20px 38px rgba(59,130,246,0.24), 0 10px 22px rgba(124,58,237,0.2);
+  box-shadow: 0 20px 38px rgba(59,130,246,0.24), 0 10px 22px rgba(74,123,165,0.2);
 }
 
 .signInBtn:active:not(:disabled) {
@@ -325,7 +325,7 @@
 
 .secondaryBtn:hover:not(:disabled) {
   background: white;
-  border-color: rgba(124,58,237,0.28);
+  border-color: rgba(74,123,165,0.28);
   transform: translateY(-1px);
   box-shadow: 0 10px 22px rgba(15,23,42,0.08);
 }
@@ -399,15 +399,15 @@
 }
 
 .wsTypeBtn:hover {
-  border-color: rgba(124,58,237,0.24);
-  background: rgba(124,58,237,0.05);
+  border-color: rgba(74,123,165,0.24);
+  background: rgba(74,123,165,0.05);
   transform: translateY(-1px);
 }
 
 .wsTypeBtnActive {
-  border-color: rgba(124,58,237,0.42);
-  background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(59,130,246,0.08));
-  box-shadow: 0 12px 24px rgba(124,58,237,0.12), 0 0 0 1px rgba(124,58,237,0.18);
+  border-color: rgba(74,123,165,0.42);
+  background: linear-gradient(135deg, rgba(74,123,165,0.12), rgba(59,130,246,0.08));
+  box-shadow: 0 12px 24px rgba(74,123,165,0.12), 0 0 0 1px rgba(74,123,165,0.18);
 }
 
 .wsTypeBtn svg {
@@ -416,7 +416,7 @@
 }
 
 .wsTypeBtnActive svg {
-  color: #7c3aed;
+  color: #4a7ba5;
 }
 
 .wsTypeLabel {
@@ -433,7 +433,7 @@
 }
 
 .wsTypeBtnActive .wsTypeLabel {
-  color: #7c3aed;
+  color: #4a7ba5;
 }
 
 /* PWA Mobile Optimization */
@@ -506,7 +506,7 @@
 @media (prefers-color-scheme: dark) {
   .container {
     background:
-      radial-gradient(circle at 18% 18%, rgba(124, 58, 237, 0.18), transparent 22%),
+      radial-gradient(circle at 18% 18%, rgba(74,123,165, 0.18), transparent 22%),
       linear-gradient(135deg, #09111f 0%, #111b38 35%, #1d2b5a 100%);
   }
 }

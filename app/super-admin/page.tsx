@@ -141,7 +141,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
     const normalizedType = accessType === 'subscription' ? 'subscription' : accessType === 'code' ? 'code' : 'free';
     const visibility = publicFlag ? 'Public' : 'Restricted';
     const accessText = normalizedType === 'subscription'
-      ? `Subscription${planName ? ` · ${planName}` : ''}`
+      ? `Subscription${planName ? ` Â· ${planName}` : ''}`
       : normalizedType === 'code'
         ? 'Code-Based'
         : 'Free';
@@ -418,7 +418,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse 80% 55% at 10% -8%, rgba(132,187,254,0.20) 0%, transparent 55%), radial-gradient(ellipse 70% 50% at 90% 105%, rgba(170,199,215,0.25) 0%, transparent 50%), radial-gradient(ellipse 60% 65% at 50% 50%, rgba(223,235,246,0.30) 0%, transparent 65%), linear-gradient(160deg, #f8f0ed 0%, #dfe2e7 30%, #cbdce7 65%, #dfebf6 100%)', display: 'flex', flexDirection: 'column' }}>
       
-      {/* ═══ TOP NAV BAR ═══ */}
+      {/* â•â•â• TOP NAV BAR â•â•â• */}
       <header style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(226,232,240,0.6)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Left: brand */}
@@ -456,7 +456,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
         </div>
       </header>
 
-      {/* ═══ MAIN CONTENT ═══ */}
+      {/* â•â•â• MAIN CONTENT â•â•â• */}
       <main style={{ flex: 1, padding: '28px 24px', maxWidth: 1280, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         {loading ? (
           <div style={{ padding: 80, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>Loading platform data...</div>
@@ -464,7 +464,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
           <div style={{ padding: 80, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>Unable to load data. Ensure you have superadmin access.</div>
         ) : (
           <>
-            {/* ═══ DASHBOARD ═══ */}
+            {/* â•â•â• DASHBOARD â•â•â• */}
             {tab === 'dashboard' && (
               <>
                 <div style={{ marginBottom: 24 }}>
@@ -478,8 +478,8 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                   <CountCard label="Members"           value={data.counts?.workspaceMembers}     icon={Users} color="#059669" />
                   <CountCard label="Projects"          value={data.counts?.projects}             icon={FolderKanban} color="#3b82f6" />
                   <CountCard label="Tasks"             value={data.counts?.tasks}                icon={CheckSquare} color="#f59e0b" />
-                  <CountCard label="Workers"            value={data.counts?.workerAgents}         icon={Bot} color="#8b5cf6" />
-                  <CountCard label="Personal AI"       value={data.counts?.personalAgents}       icon={Bot} color="#7c3aed" />
+                  <CountCard label="Workers"            value={data.counts?.workerAgents}         icon={Bot} color="#5a8fc0" />
+                  <CountCard label="Personal AI"       value={data.counts?.personalAgents}       icon={Bot} color="#4a7ba5" />
                   <CountCard label="Chat Conversations" value={data.counts?.conversations}        icon={Activity} color="#06b6d4" />
                   <CountCard label="Org Units"         value={data.counts?.organizationalUnits}  icon={Box} color="#f97316" />
                 </div>
@@ -522,7 +522,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
               </>
             )}
 
-            {/* ═══ USERS ═══ */}
+            {/* â•â•â• USERS â•â•â• */}
             {tab === 'users' && (
               <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', borderRadius: 14, border: '1px solid rgba(226,232,240,0.6)', overflow: 'hidden' }}>
                 <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(226,232,240,0.5)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
@@ -551,7 +551,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
               </div>
             )}
 
-            {/* ═══ WORKSPACES ═══ */}
+            {/* â•â•â• WORKSPACES â•â•â• */}
             {tab === 'workspaces' && (
               <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', borderRadius: 14, border: '1px solid rgba(226,232,240,0.6)', overflow: 'hidden' }}>
                 <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(226,232,240,0.5)' }}>
@@ -574,7 +574,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
               </div>
             )}
 
-            {/* ═══ AI WORKERS ═══ */}
+            {/* â•â•â• AI WORKERS â•â•â• */}
             {tab === 'agents' && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -627,7 +627,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                         e.target.value = '';
                       }} />
                       {aAvatarPreview && (
-                        <button onClick={() => { setAAvatarPreview(null); setAAvatarFile(null); }} style={{ padding: '4px 8px', border: 'none', background: 'transparent', color: '#dc2626', cursor: 'pointer', fontSize: 11 }}>✕ Hapus</button>
+                        <button onClick={() => { setAAvatarPreview(null); setAAvatarFile(null); }} style={{ padding: '4px 8px', border: 'none', background: 'transparent', color: '#dc2626', cursor: 'pointer', fontSize: 11 }}>âœ• Hapus</button>
                       )}
                     </div>
 
@@ -642,7 +642,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                         <textarea placeholder="Contoh: AI Worker yang membantu tim marketing membuat konten social media, menjadwalkan posting, dan menganalisis engagement. Spesialisasi di Instagram dan TikTok." value={aBrief} onChange={e => setABrief(e.target.value)} rows={3} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid rgba(226,232,240,0.8)', fontSize: 12, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }} />
                         <button onClick={autoFillAgent} disabled={aEnhancing || !aBrief.trim()} style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 8, border: 'none', background: (aEnhancing || !aBrief.trim()) ? '#94a3b8' : 'linear-gradient(135deg,#6366f1,#4f46e5)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: (aEnhancing || !aBrief.trim()) ? 'not-allowed' : 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
                           {aEnhancing ? <Loader2 size={13} style={{ animation: 'spin 0.8s linear infinite' }} /> : <Sparkles size={13} />}
-                          {aEnhancing ? 'AI Memproses...' : '✨ Auto-Fill All Fields'}
+                          {aEnhancing ? 'AI Memproses...' : 'âœ¨ Auto-Fill All Fields'}
                         </button>
                       </div>
                     )}
@@ -823,7 +823,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                         }} style={{ cursor: 'pointer' }} />
                       <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Workers ({agents.filter((a: any) => !a.is_personal).length})</span>
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>
-                        {publicWorkerCount} public · {restrictedWorkerCount} restricted
+                        {publicWorkerCount} public Â· {restrictedWorkerCount} restricted
                       </span>
                     </div>
                     <div style={{ position: 'relative', maxWidth: 200 }}>
@@ -841,13 +841,13 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                       return filteredWorkers.map((a: any, i: number) => {
                         const assignedCount = assignments.filter((as: any) => as.agent_id === a.agent_id).length;
                         const reachMode = a.is_public
-                          ? '🌍 Public'
+                          ? 'ðŸŒ Public'
                           : a.role_count > 0
-                            ? `👥 ${a.role_count} roles`
+                            ? `ðŸ‘¥ ${a.role_count} roles`
                             : assignedCount > 0
-                              ? `👤 ${assignedCount} users`
-                              : '🔒 Restricted';
-                        const reachColor = a.is_public ? '#059669' : a.role_count > 0 ? '#7c3aed' : assignedCount > 0 ? '#3b82f6' : '#94a3b8';
+                              ? `ðŸ‘¤ ${assignedCount} users`
+                              : 'ðŸ”’ Restricted';
+                        const reachColor = a.is_public ? '#059669' : a.role_count > 0 ? '#4a7ba5' : assignedCount > 0 ? '#3b82f6' : '#94a3b8';
                         return (
                           <div key={a.agent_id} style={{ display: 'grid', gridTemplateColumns: '30px 2fr 1fr 1.5fr 1.2fr 0.8fr', gap: 8, padding: '9px 18px', borderBottom: i < filteredWorkers.length - 1 ? '1px solid rgba(226,232,240,0.3)' : 'none', fontSize: 12, alignItems: 'center' }}>
                             <input type="checkbox" checked={selectedWorkerIds.includes(a.agent_id)} onChange={() => toggleSelectWorker(a.agent_id)} style={{ cursor: 'pointer' }} />
@@ -892,7 +892,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                             </div>
                             <span style={{ color: a.is_active ? '#059669' : '#dc2626', fontWeight: 600, textAlign: 'right', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
                               {a.is_active ? 'Active' : 'Inactive'}
-                              <button onClick={() => deleteWorker(a.agent_id)} style={{ padding: '2px 6px', border: 'none', borderRadius: 4, background: 'rgba(239,68,68,0.1)', color: '#dc2626', cursor: 'pointer', fontSize: 10 }} title="Hapus">✕</button>
+                              <button onClick={() => deleteWorker(a.agent_id)} style={{ padding: '2px 6px', border: 'none', borderRadius: 4, background: 'rgba(239,68,68,0.1)', color: '#dc2626', cursor: 'pointer', fontSize: 10 }} title="Hapus">âœ•</button>
                             </span>
                           </div>
                         );
@@ -971,7 +971,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                   </div>
                 ) : null}
 
-                {/* ═══ USER AI AGENTS SECTION ═══ */}
+                {/* â•â•â• USER AI AGENTS SECTION â•â•â• */}
                 <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', borderRadius: 14, border: '1px solid rgba(245,158,11,0.2)', overflow: 'hidden', marginBottom: 12 }}>
                   <div style={{ padding: '11px 18px', borderBottom: '1px solid rgba(245,158,11,0.12)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(135deg,#f59e0b,#d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 800 }}>U</div>
@@ -1002,10 +1002,10 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                   })()}
                 </div>
 
-                {/* ═══ PERSONAL AI SECTION ═══ */}
+                {/* â•â•â• PERSONAL AI SECTION â•â•â• */}
                 <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', borderRadius: 14, border: '1px solid rgba(139,92,246,0.15)', overflow: 'hidden' }}>
                   <div style={{ padding: '11px 18px', borderBottom: '1px solid rgba(139,92,246,0.12)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 800 }}>P</div>
+                    <div style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(135deg,#5a8fc0,#4a7ba5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 800 }}>P</div>
                     <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>Personal AI ({agents.filter((a: any) => a.is_personal && a.agent_id?.startsWith('personal-')).length})</span>
                     <span style={{ fontSize: 11, color: '#94a3b8' }}>Asisten AI otomatis dari sistem</span>
                   </div>
@@ -1021,7 +1021,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
                         <div key={a.agent_id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 0.8fr 0.8fr', gap: 10, padding: '9px 18px', borderBottom: i < personalList.length - 1 ? '1px solid rgba(226,232,240,0.25)' : 'none', fontSize: 11, alignItems: 'center' }}>
                           <div>
                             <span style={{ fontWeight: 600, color: '#0f172a' }}>{a.name}</span>
-                            <span style={{ marginLeft: 6, fontSize: 10, color: '#7c3aed', fontWeight: 600 }}>@{a.owner_username}</span>
+                            <span style={{ marginLeft: 6, fontSize: 10, color: '#4a7ba5', fontWeight: 600 }}>@{a.owner_username}</span>
                           </div>
                           <span style={{ color: '#64748b' }}>{a.model?.split('/').pop() || '-'}</span>
                           <span style={{ color: '#64748b' }}>{a.owner_name || a.owner_username || '-'}</span>
@@ -1035,7 +1035,7 @@ export default function SuperAdminPage({ initialTab }: SuperAdminPageProps = {})
               </>
             )}
 
-            {/* ═══ ACTIVITY ═══ */}
+            {/* â•â•â• ACTIVITY â•â•â• */}
             {tab === 'activity' && (
               <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', borderRadius: 14, border: '1px solid rgba(226,232,240,0.6)', overflow: 'hidden' }}>
                 <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(226,232,240,0.5)' }}>

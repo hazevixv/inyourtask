@@ -580,7 +580,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
           const isCategory = section.type === 'category';
           const isTeamSection = section.type === 'team';
 
-          // ── TEAM MEMBERS: grouped by unit ──
+          // â”€â”€ TEAM MEMBERS: grouped by unit â”€â”€
           if (isTeamSection) {
             const teamItems = section.items as any[];
 
@@ -685,7 +685,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                                       width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
                                       background: isSupport
                                         ? 'linear-gradient(135deg,#3b82f6,#2563eb)'
-                                        : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                                        : 'linear-gradient(135deg,#6366f1,#5a8fc0)',
                                       overflow: 'hidden', display: 'flex', alignItems: 'center',
                                       justifyContent: 'center', color: 'white', fontWeight: 700,
                                       fontSize: '0.75rem', fontFamily: 'DM Sans, sans-serif'
@@ -708,7 +708,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                                             color: isSupport ? '#3b82f6' : isLeader ? '#d97706' : '#3d6ba3',
                                             borderRadius: 4, fontFamily: 'DM Sans, sans-serif', textTransform: 'capitalize'
                                           }}>
-                                            {isSupport ? '🔧' : isLeader ? '👑' : '👤'} {item.team_role}
+                                            {isSupport ? 'ðŸ”§' : isLeader ? 'ðŸ‘‘' : 'ðŸ‘¤'} {item.team_role}
                                           </span>
                                         )}
                                       </div>
@@ -755,7 +755,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
                                 <div style={{
                                   width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-                                  background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                                  background: 'linear-gradient(135deg,#6366f1,#5a8fc0)',
                                   overflow: 'hidden', display: 'flex', alignItems: 'center',
                                   justifyContent: 'center', color: 'white', fontWeight: 700,
                                   fontSize: '0.75rem', fontFamily: 'DM Sans, sans-serif'
@@ -816,7 +816,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
             );
           }
 
-          // ── CATEGORIES (and other editable sections) ──
+          // â”€â”€ CATEGORIES (and other editable sections) â”€â”€
           return (
             <section key={section.type} className={`${styles.card} ${isCategory ? styles.cardWide : ''}`}>
               <div className={styles.sectionHeader}>
@@ -906,7 +906,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
               )}
               {!isAdmin && (
                 <div style={{ padding: '10px 14px', background: 'rgba(248,250,252,0.8)', borderRadius: 8, fontSize: '0.8125rem', color: '#9CA3AF', fontFamily: 'DM Sans, sans-serif', border: '1px dashed rgba(226,232,240,0.7)' }}>
-                  🔒 Only admins can add or edit {section.title.toLowerCase()}
+                  ðŸ”’ Only admins can add or edit {section.title.toLowerCase()}
                 </div>
               )}
             </section>
@@ -971,27 +971,27 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
           </div>
           {!isAdmin && (
             <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(248,250,252,0.8)', borderRadius: 8, fontSize: '0.8125rem', color: '#9CA3AF', fontFamily: 'DM Sans, sans-serif' }}>
-              🔒 Only admins can change default values
+              ðŸ”’ Only admins can change default values
             </div>
           )}
         </section>
       </div>
 
-      {/* ═══ AI AGENTS HUB ═══ */}
+      {/* â•â•â• AI AGENTS HUB â•â•â• */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, padding: '12px 16px', background: 'linear-gradient(135deg,rgba(16,185,129,0.06),rgba(99,102,241,0.06))', borderRadius: 12, border: '1px solid rgba(16,185,129,0.15)' }}>
         <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg,#10b981,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Bot size={16} color="white" />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', fontFamily: 'DM Sans, sans-serif' }}>AI Agents</div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'DM Sans, sans-serif' }}>Personal AI (buat sendiri) &bull; Worker AI (dari Super Admin) — semua di sini</div>
+          <div style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'DM Sans, sans-serif' }}>Personal AI (buat sendiri) &bull; Worker AI (dari Super Admin) â€” semua di sini</div>
         </div>
         <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={openNewAgent} style={{ whiteSpace: 'nowrap' }}>
           <Plus size={14} /> New Agent
         </button>
       </div>
 
-      {/* ── Personal AI Assistant ── */}
+      {/* â”€â”€ Personal AI Assistant â”€â”€ */}
       <section className={styles.card}>
         <div className={styles.sectionHeader}>
           <div>
@@ -1025,7 +1025,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            {/* Avatar — pakai foto user, badge bot di pojok */}
+            {/* Avatar â€” pakai foto user, badge bot di pojok */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg,#4a7ba5,#85b8e0)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.5rem', fontWeight: 700, fontFamily: 'DM Sans, sans-serif', boxShadow: '0 4px 16px rgba(74,123,165,0.25)' }}>
                 {/* Priority: user avatar > agent avatar > initials */}
@@ -1040,7 +1040,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                   (user?.full_name || user?.username || '?').charAt(0).toUpperCase()
                 )}
               </div>
-              {/* Bot badge — purple untuk personal AI */}
+              {/* Bot badge â€” purple untuk personal AI */}
               <div style={{ position: 'absolute', bottom: -2, right: -2, width: 24, height: 24, borderRadius: '50%', background: 'linear-gradient(135deg,#4a7ba5,#85b8e0)', border: '2.5px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(74,123,165,0.3)' }}>
                 <Bot size={12} color="white" strokeWidth={2.5} />
               </div>
@@ -1056,10 +1056,10 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
                 <span style={{ padding: '3px 10px', background: 'rgba(61,107,163,0.08)', color: '#3d6ba3', borderRadius: 999, fontSize: '0.75rem', fontWeight: 600, fontFamily: 'DM Sans, sans-serif' }}>
-                  🤖 Personal Assistant
+                  ðŸ¤– Personal Assistant
                 </span>
                 <span style={{ padding: '3px 10px', background: personalAgent.is_active ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', color: personalAgent.is_active ? '#059669' : '#dc2626', borderRadius: 999, fontSize: '0.75rem', fontWeight: 600, fontFamily: 'DM Sans, sans-serif' }}>
-                  {personalAgent.is_active ? '● Active' : '○ Inactive'}
+                  {personalAgent.is_active ? 'â— Active' : 'â—‹ Inactive'}
                 </span>
                 <span style={{ padding: '3px 10px', background: 'rgba(99,102,241,0.08)', color: '#6366f1', borderRadius: 999, fontSize: '0.75rem', fontWeight: 600, fontFamily: 'DM Sans, sans-serif' }}>
                   {personalAgent.model}
@@ -1076,14 +1076,14 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                   className={`${styles.btn} ${styles.btnPrimary}`}
                   onClick={() => openEditAgent(personalAgent)}
                 >
-                  ✏️ Customize My AI
+                  âœï¸ Customize My AI
                 </button>
                 <button
                   className={styles.btn}
                   onClick={() => router.push('/chat')}
                   style={{ background: 'rgba(16,185,129,0.08)', color: '#059669', border: '1px solid rgba(16,185,129,0.2)' }}
                 >
-                  💬 Open Chat
+                  ðŸ’¬ Open Chat
                 </button>
               </div>
             </div>
@@ -1091,7 +1091,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
         )}
       </section>
 
-      {/* ── AI Workers (from Super Admin) ── */}
+      {/* â”€â”€ AI Workers (from Super Admin) â”€â”€ */}
       <section className={styles.card}>
         <div className={styles.sectionHeader}>
           <div>
@@ -1099,7 +1099,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
               <Bot size={18} />
               AI Workers dari Super Admin
             </h3>
-            <p>Worker AI yang disediakan — aktifkan dan mulai chat</p>
+            <p>Worker AI yang disediakan â€” aktifkan dan mulai chat</p>
           </div>
           <span className={styles.countBadge}>{workerAgents.length}</span>
         </div>
@@ -1117,7 +1117,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
               const isDirectAssigned = agent.assignment_id && agent.assigned_active;
               const isAssigned = isRoleBased || isDirectAssigned;
               return (
-                <div key={agent.agent_id} style={{ background: '#fff', borderRadius: 10, border: `1px solid ${isAssigned ? 'rgba(16,185,129,0.25)' : 'rgba(226,232,240,0.6)'}`, padding: 14, borderLeft: `4px solid ${isAssigned ? '#10b981' : agent.access_type === 'free' ? '#3b82f6' : agent.access_type === 'subscription' ? '#f59e0b' : '#8b5cf6'}` }}>
+                <div key={agent.agent_id} style={{ background: '#fff', borderRadius: 10, border: `1px solid ${isAssigned ? 'rgba(16,185,129,0.25)' : 'rgba(226,232,240,0.6)'}`, padding: 14, borderLeft: `4px solid ${isAssigned ? '#10b981' : agent.access_type === 'free' ? '#3b82f6' : agent.access_type === 'subscription' ? '#f59e0b' : '#5a8fc0'}` }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <div style={{ width: 38, height: 38, borderRadius: 8, background: isAssigned ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {agent.avatar ? <img src={getAvatarUrl(agent.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} /> : <Bot size={18} color={isAssigned ? '#059669' : '#3b82f6'} />}
@@ -1131,8 +1131,8 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                         }}>
                           {agent.access_type === 'free' ? 'Gratis' : agent.access_type === 'subscription' ? 'Berlangganan' : 'Kode'}
                         </span>
-                        {isAssigned && <span style={{ padding: '1px 6px', borderRadius: 3, fontSize: 9, fontWeight: 700, background: 'rgba(16,185,129,0.1)', color: '#059669' }}>✓ Aktif</span>}
-                        {agent.role_count > 0 && <span style={{ padding: '1px 6px', borderRadius: 3, fontSize: 9, fontWeight: 700, background: 'rgba(124,58,237,0.1)', color: '#7c3aed' }}>👥 Role</span>}
+                        {isAssigned && <span style={{ padding: '1px 6px', borderRadius: 3, fontSize: 9, fontWeight: 700, background: 'rgba(16,185,129,0.1)', color: '#059669' }}>âœ“ Aktif</span>}
+                        {agent.role_count > 0 && <span style={{ padding: '1px 6px', borderRadius: 3, fontSize: 9, fontWeight: 700, background: 'rgba(124,58,237,0.1)', color: '#4a7ba5' }}>ðŸ‘¥ Role</span>}
                       </div>
                       {agent.description && <p style={{ fontSize: 11, color: '#64748b', margin: '3px 0 6px', lineHeight: 1.4 }}>{agent.description}</p>}
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -1142,7 +1142,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                               await fetch('/api/chat/init', { method: 'POST', credentials: 'include' });
                             } catch {}
                             router.push('/chat');
-                          }} style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: '#059669', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>💬 Buka Chat</button>
+                          }} style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: '#059669', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>ðŸ’¬ Buka Chat</button>
                         ) : (
                           <button onClick={async () => {
                             try {
@@ -1169,7 +1169,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                     {canManageWorkerAgents && (
                       <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
                         <button onClick={() => openEditAgent(agent)} className={styles.btn} style={{ padding: '4px 8px', fontSize: 10 }}>Edit</button>
-                        <button onClick={() => openRoleAssign(agent)} className={styles.btn} style={{ padding: '4px 8px', fontSize: 10 }}>👥</button>
+                        <button onClick={() => openRoleAssign(agent)} className={styles.btn} style={{ padding: '4px 8px', fontSize: 10 }}>ðŸ‘¥</button>
                       </div>
                     )}
                   </div>
@@ -1180,7 +1180,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
         )}
       </section>
 
-      {/* ── All AI Agents Management ── */}
+      {/* â”€â”€ All AI Agents Management â”€â”€ */}
       <section className={styles.card}>
         <div className={styles.sectionHeader}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
@@ -1192,7 +1192,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
               <p>
                 {canManagePersonalAgents
                   ? 'Semua Personal AI buatan user di workspace'
-                  : 'AI Agent buatanmu — kelola dan sesuaikan'}
+                  : 'AI Agent buatanmu â€” kelola dan sesuaikan'}
               </p>
             </div>
             <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={openNewAgent}>
@@ -1227,7 +1227,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                   <div className={styles.agentInfo}>
                     <div className={styles.agentName}>{agent.name}</div>
                     <div className={styles.agentRole}>{agent.role || 'AI Agent'}</div>
-                    {agent.is_personal ? <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(139,92,246,0.1)', color: '#7c3aed', borderRadius: 4, fontWeight: 600 }}>Personal</span> : <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(16,185,129,0.1)', color: '#059669', borderRadius: 4, fontWeight: 600 }}>Worker</span>}
+                    {agent.is_personal ? <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(139,92,246,0.1)', color: '#4a7ba5', borderRadius: 4, fontWeight: 600 }}>Personal</span> : <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(16,185,129,0.1)', color: '#059669', borderRadius: 4, fontWeight: 600 }}>Worker</span>}
                   </div>
                   <div className={styles.agentStatus} style={{ background: agent.is_active ? 'var(--green-bg)' : 'var(--red-bg)', color: agent.is_active ? 'var(--green)' : 'var(--red)' }}>
                     {agent.is_active ? 'Active' : 'Inactive'}
@@ -1243,7 +1243,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
                       {assignedRoles.map(ar => (
                         <span key={ar.role_name} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: 'rgba(16,185,129,0.1)', color: '#059669', borderRadius: 999, fontSize: '0.6875rem', fontWeight: 600, fontFamily: 'DM Sans, sans-serif' }}>
-                          👥 {ar.role_name}
+                          ðŸ‘¥ {ar.role_name}
                         </span>
                       ))}
                     </div>
@@ -1251,7 +1251,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                 })()}
                 <div className={styles.agentActions}>
                   {isWorkerReadOnly ? (
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'DM Sans, sans-serif', padding: '6px 0' }}>🔒 Worker AI dari Super Admin — read only</span>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'DM Sans, sans-serif', padding: '6px 0' }}>ðŸ”’ Worker AI dari Super Admin â€” read only</span>
                   ) : canEdit ? (
                     <>
                       <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => openEditAgent(agent)}>Edit</button>
@@ -1261,7 +1261,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                       {canManageWorkerAgents && !agent.is_personal && (
                         <button className={`${styles.btn}`} onClick={() => openRoleAssign(agent)} title="Assign to job roles"
                           style={{ background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}>
-                          👥 Roles
+                          ðŸ‘¥ Roles
                         </button>
                       )}
                       <button className={`${styles.btn} ${styles.btnDanger}`} onClick={() => deleteAgent(agent)}
@@ -1271,7 +1271,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                     </>
                   ) : (
                     <span style={{ fontSize: '0.75rem', color: '#9CA3AF', fontFamily: 'DM Sans, sans-serif' }}>
-                      🔒 Admin agent — read only
+                      ðŸ”’ Admin agent â€” read only
                     </span>
                   )}
                 </div>
@@ -1321,7 +1321,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                 <div style={{ fontWeight: 700, fontSize: '0.9375rem', fontFamily: 'DM Sans, sans-serif', color: '#111827' }}>{agentForm.name || 'New Agent'}</div>
                 <div style={{ fontSize: '0.8125rem', color: '#6B7280', marginTop: 2 }}>{agentForm.role || 'AI Agent'}</div>
                 <button onClick={() => agentFileInputRef.current?.click()} style={{ marginTop: 6, fontSize: '0.75rem', color: '#10B981', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'DM Sans, sans-serif', fontWeight: 600 }}>
-                  📷 Change Avatar
+                  ðŸ“· Change Avatar
                 </button>
               </div>
             </div>
@@ -1351,7 +1351,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
             </div>
 
             <div className={styles.defaultField} style={{ marginBottom: 12 }}>
-              <span>System Prompt * — Main instructions for this agent</span>
+              <span>System Prompt * â€” Main instructions for this agent</span>
               <textarea
                 rows={5}
                 placeholder="You are an AI agent specialized in... You help the team with..."
@@ -1362,7 +1362,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
             </div>
 
             <div className={styles.defaultField} style={{ marginBottom: 20 }}>
-              <span>Knowledge Base — Additional context this agent should remember</span>
+              <span>Knowledge Base â€” Additional context this agent should remember</span>
               <textarea
                 rows={4}
                 placeholder="Enter specific information, FAQs, or context this agent needs to know..."
@@ -1432,7 +1432,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {agentRoleAssignments.filter(a => a.agent_id === roleAssignAgent.agent_id).map(ar => (
                     <span key={ar.role_name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'rgba(16,185,129,0.1)', color: '#059669', borderRadius: 999, fontSize: '0.8125rem', fontWeight: 600, fontFamily: 'DM Sans, sans-serif' }}>
-                      👥 {ar.role_name}
+                      ðŸ‘¥ {ar.role_name}
                       <button
                         onClick={() => removeRoleFromAgent(roleAssignAgent.agent_id, ar.role_name)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#059669', padding: 0, display: 'flex', alignItems: 'center' }}
@@ -1474,7 +1474,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                 </button>
               </div>
               <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#9CA3AF', fontFamily: 'DM Sans, sans-serif' }}>
-                💡 Karyawan dengan job position ini akan otomatis mendapatkan akses ke agent ini
+                ðŸ’¡ Karyawan dengan job position ini akan otomatis mendapatkan akses ke agent ini
               </div>
             </div>
 
