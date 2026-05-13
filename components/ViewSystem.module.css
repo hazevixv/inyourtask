@@ -1,0 +1,278 @@
+/**
+ * ViewSystem Styles
+ * 
+ * Central view controller component styles.
+ * Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.11, 12.12
+ */
+
+/* ============================================================================
+   View System Container
+   ============================================================================ */
+
+.viewSystem {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+}
+
+/* ============================================================================
+   Screen Reader Only - Requirements: 11.2
+   ============================================================================ */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================================================
+   View Content Area
+   ============================================================================ */
+
+.viewContent {
+  flex: 1;
+  overflow: auto;
+  background: #f8fafc;
+}
+
+/* ============================================================================
+   Warning Banner
+   ============================================================================ */
+
+.warning {
+  padding: 12px 16px;
+  background: #fef3c7;
+  border-bottom: 1px solid #fbbf24;
+  color: #92400e;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ============================================================================
+   Empty State
+   ============================================================================ */
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px 20px;
+}
+
+.emptyContent {
+  text-align: center;
+  max-width: 400px;
+}
+
+.emptyMessage {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.emptyHint {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.clearFiltersBtn {
+  padding: 10px 20px;
+  background: #3d6ba3;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+  min-height: 44px;
+}
+
+.clearFiltersBtn:hover {
+  background: #84bbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.clearFiltersBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
+}
+
+.clearFiltersBtn:focus-visible {
+  outline: 2px solid #3d6ba3;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Loading State
+   ============================================================================ */
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px 20px;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(124, 58, 237, 0.2);
+  border-top-color: #3d6ba3;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   Error State
+   ============================================================================ */
+
+.errorState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px 20px;
+}
+
+.errorContent {
+  text-align: center;
+  max-width: 400px;
+}
+
+.errorMessage {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ef4444;
+  margin-bottom: 8px;
+}
+
+.errorHint {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.retryBtn {
+  padding: 10px 20px;
+  background: #3d6ba3;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+  min-height: 44px;
+}
+
+.retryBtn:hover {
+  background: #84bbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.retryBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
+}
+
+.retryBtn:focus-visible {
+  outline: 2px solid #3d6ba3;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Mobile Responsiveness - UPDATED 2026-04-20 17:02
+   ============================================================================ */
+
+/* Mobile padding for all screen sizes */
+@media (max-width: 768px) {
+  .viewSystem {
+    padding: 14px !important; /* Equal padding all sides */
+    padding-bottom: 100px !important; /* Space for BottomNav */
+    box-sizing: border-box;
+  }
+}
+
+/* Small mobile devices (320px - 480px) */
+@media (max-width: 480px) {
+  .emptyState,
+  .loadingState,
+  .errorState {
+    min-height: 300px;
+    padding: 30px 16px;
+  }
+
+  .emptyMessage,
+  .errorMessage {
+    font-size: 1rem;
+  }
+
+  .emptyHint,
+  .errorHint {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Tablet and desktop (768px+) */
+@media (min-width: 768px) {
+  .emptyState,
+  .loadingState,
+  .errorState {
+    min-height: 500px;
+  }
+
+  .emptyMessage,
+  .errorMessage {
+    font-size: 1.25rem;
+  }
+}
+
+/* ============================================================================
+   Accessibility - Requirement 13.1, 13.2, 13.10
+   ============================================================================ */
+
+/* Ensure visible focus indicators */
+.clearFiltersBtn:focus-visible,
+.retryBtn:focus-visible {
+  outline: 2px solid #3d6ba3;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .clearFiltersBtn,
+  .retryBtn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .clearFiltersBtn,
+  .retryBtn,
+  .loadingSpinner {
+    animation: none;
+    transition: none;
+  }
+}

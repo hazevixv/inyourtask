@@ -1,0 +1,124 @@
+/* Reaction Buttons */
+.reactions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.reaction {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 140ms;
+  font-size: 0.875rem;
+}
+
+.reaction:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(124, 58, 237, 0.3);
+  transform: scale(1.05);
+}
+
+.reactionActive {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+.reactionEmoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.reactionCount {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.reactionActive .reactionCount {
+  color: #3d6ba3;
+}
+
+.addReaction {
+  position: relative;
+}
+
+.addReactionBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  background: rgba(255, 255, 255, 0.6);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 140ms;
+}
+
+.addReactionBtn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(124, 58, 237, 0.3);
+  color: #3d6ba3;
+}
+
+.pickerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 98;
+}
+
+.quickPicker {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: white;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 99;
+  animation: slideUp 150ms ease;
+}
+
+.quickEmoji {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 140ms;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quickEmoji:hover {
+  background: rgba(124, 58, 237, 0.1);
+  transform: scale(1.15);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

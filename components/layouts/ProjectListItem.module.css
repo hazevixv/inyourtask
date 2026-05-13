@@ -1,0 +1,319 @@
+/**
+ * ProjectListItem Styles
+ * 
+ * Mobile-first responsive design with Raymaizing purple palette.
+ * Touch-friendly targets (44x44px minimum).
+ * 
+ * Requirements: 9.3, 9.8, 12.2, 12.4, 12.6, 12.8
+ */
+
+/* ============================================================================
+   Project Item Container
+   ============================================================================ */
+
+.projectItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  position: relative;
+}
+
+/* Hover effect - Requirements: 12.4 */
+.projectItem:hover {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+/* Focus state for keyboard navigation */
+.projectItem:focus {
+  outline: 2px solid #3d6ba3;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Checkbox
+   ============================================================================ */
+
+.checkbox {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #3d6ba3;
+}
+
+/* ============================================================================
+   Content Area
+   ============================================================================ */
+
+.content {
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Project name - Requirements: 12.6 */
+.projectName {
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* ============================================================================
+   Metadata Row
+   ============================================================================ */
+
+.metadata {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================================
+   Category with Folder Icon
+   ============================================================================ */
+
+.category {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.category svg {
+  flex-shrink: 0;
+  color: #3d6ba3;
+}
+
+/* ============================================================================
+   Status Badge - Requirements: 12.8
+   ============================================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem; /* 12px */
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* Status badge colors - Requirements: 12.8 */
+.statusClosed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.statusActive {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.statusOnHold {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusPlanning {
+  background: #e9d5ff;
+  color: #6b21a8;
+}
+
+/* ============================================================================
+   Task Count
+   ============================================================================ */
+
+.taskCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3d6ba3;
+}
+
+/* ============================================================================
+   Progress Bar - Requirements: 3.4
+   ============================================================================ */
+
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background: rgba(226, 232, 240, 0.8);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Gradient fill from #3d6ba3 to #aac7d7 - Requirements: 3.4 */
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3d6ba3 0%, #aac7d7 100%);
+  border-radius: 4px;
+  transition: width 300ms ease;
+}
+
+.progressText {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3d6ba3;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ============================================================================
+   Assignees
+   ============================================================================ */
+
+.assignees {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+}
+
+.assignees svg {
+  flex-shrink: 0;
+}
+
+.assigneeList {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.assigneeChip {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(124, 58, 237, 0.1);
+  color: #3d6ba3;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.assigneeMore {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3d6ba3;
+}
+
+/* ============================================================================
+   Quick Actions - Requirements: 9.3, 9.8
+   ============================================================================ */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Touch-friendly button size - Requirements: 9.8 */
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.actionBtn:hover {
+  background: rgba(124, 58, 237, 0.1);
+  color: #3d6ba3;
+}
+
+.actionBtn:focus {
+  outline: 2px solid #3d6ba3;
+  outline-offset: 2px;
+}
+
+.actionBtnDanger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+/* Mobile optimization - Requirements: 9.3 */
+@media (max-width: 640px) {
+  .projectItem {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .projectName {
+    font-size: 0.875rem; /* 14px */
+  }
+
+  .metadata {
+    gap: 6px;
+  }
+
+  .badge {
+    font-size: 0.6875rem; /* 11px */
+    padding: 2px 6px;
+  }
+
+  .category {
+    font-size: 0.6875rem; /* 11px */
+  }
+
+  .progressBar {
+    height: 6px;
+  }
+
+  .progressText {
+    font-size: 0.6875rem; /* 11px */
+    min-width: 32px;
+  }
+
+  .actions {
+    gap: 2px;
+  }
+
+  .actionBtn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .projectItem {
+    padding: 12px 20px;
+  }
+}

@@ -1,0 +1,142 @@
+/**
+ * ListLayout Styles
+ * 
+ * Mobile-first responsive design for list view container.
+ * Supports both grouped and flat list layouts.
+ * 
+ * Requirements: 2.1, 2.4, 3.1, 8.4, 9.4, 9.7, 11.1, 11.8, 14.4
+ */
+
+/* ============================================================================
+   List Container
+   ============================================================================ */
+
+.listContainer {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+}
+
+/* ============================================================================
+   Flat List (Ungrouped)
+   ============================================================================ */
+
+.flatList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ============================================================================
+   Virtual List (50+ items) - Requirements: 11.1
+   ============================================================================ */
+
+.virtualList {
+  /* Override react-window default styles */
+  outline: none !important;
+}
+
+.virtualList > div {
+  /* Ensure proper spacing between virtualized items */
+  padding: 4px 0;
+}
+
+/* ============================================================================
+   Empty State - Requirements: 14.4
+   ============================================================================ */
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 48px 24px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 8px;
+}
+
+.emptyContent {
+  text-align: center;
+  max-width: 400px;
+}
+
+.emptyMessage {
+  margin: 0 0 8px 0;
+  font-size: 1.125rem; /* 18px */
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.emptyHint {
+  margin: 0;
+  font-size: 0.875rem; /* 14px */
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   Responsive Design - Requirements: 9.4, 9.7
+   ============================================================================ */
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .listContainer {
+    padding: 0;
+  }
+
+  .flatList {
+    gap: 6px;
+  }
+
+  .emptyState {
+    min-height: 300px;
+    padding: 32px 16px;
+  }
+
+  .emptyMessage {
+    font-size: 1rem; /* 16px */
+  }
+
+  .emptyHint {
+    font-size: 0.8125rem; /* 13px */
+  }
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .listContainer {
+    padding: 0;
+  }
+
+  .flatList {
+    gap: 10px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .flatList {
+    gap: 12px;
+  }
+}
+
+/* ============================================================================
+   Performance Optimization - Requirements: 11.1, 11.8
+   ============================================================================ */
+
+/* Smooth scrolling */
+.listContainer {
+  scroll-behavior: smooth;
+}
+
+/* GPU acceleration for animations */
+.flatList > * {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Prevent layout shift during loading */
+.listContainer {
+  contain: layout style paint;
+}

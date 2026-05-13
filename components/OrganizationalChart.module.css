@@ -1,0 +1,843 @@
+/* Organizational Chart Responsive Styles */
+
+.container {
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.viewToggle {
+  display: flex;
+  background: rgba(226, 232, 240, 0.3);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.viewButton {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.viewButton.active {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #3d6ba3;
+}
+
+.viewButton.inactive {
+  background: transparent;
+  color: #6b7280;
+}
+
+.treeContainer {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  padding: 16px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.scrollArea {
+  max-height: 75vh;
+  overflow: auto;
+  width: 100%;
+  position: relative;
+}
+
+/* Grid mode specific styles */
+.scrollArea.gridMode {
+  overflow: hidden;
+  cursor: grab;
+}
+
+.scrollArea.gridMode.panning {
+  cursor: grabbing;
+}
+
+.scrollArea.gridMode:active {
+  cursor: grabbing;
+}
+
+/* Zoom controls */
+.zoomControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(226, 232, 240, 0.3);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.zoomButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: none;
+  background: white;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 150ms;
+}
+
+.zoomButton:hover:not(:disabled) {
+  background: #f3f4f6;
+  transform: scale(1.05);
+}
+
+.zoomButton:disabled {
+  background: rgba(156, 163, 175, 0.3);
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.zoomLevel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  min-width: 40px;
+  text-align: center;
+}
+
+.resetButton {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: none;
+  background: white;
+  color: #374151;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: all 150ms;
+}
+
+.resetButton:hover {
+  background: #f3f4f6;
+}
+
+/* Instructions overlay */
+.gridInstructions {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+/* Zoom indicator */
+.zoomIndicator {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Prevent text selection during panning */
+.scrollArea.panning {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.scrollArea.panning * {
+  pointer-events: none;
+}
+
+/* Smooth transitions for zoom */
+.orgChartContainer {
+  transition: transform 0.2s ease-out;
+}
+
+.orgChartContainer.panning {
+  transition: none;
+}
+
+.gridLayout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 16px;
+  width: 100%;
+  min-width: fit-content;
+}
+
+.treeLayout {
+  width: 100%;
+}
+
+.orgUnit {
+  margin-bottom: 6px;
+  width: 100%;
+}
+
+.unitCard {
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: grab;
+  transition: all 120ms;
+  width: 100%;
+  min-height: 50px;
+  border-left: 3px solid;
+}
+
+.unitCard.root {
+  padding: 12px 14px;
+  min-height: 60px;
+}
+
+.unitContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.unitInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.unitHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.unitName {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 800;
+  color: #111827;
+}
+
+.unitName.root {
+  font-size: 0.95rem;
+}
+
+.unitName.child {
+  font-size: 0.85rem;
+}
+
+.unitMeta {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  font-family: monospace;
+}
+
+.unitActions {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.actionButton {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 100ms;
+}
+
+.childrenContainer {
+  margin-top: 8px;
+  margin-left: 20px;
+  padding-left: 16px;
+  border-left: 2px solid;
+}
+
+.childrenGrid {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.childrenTree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.membersInline {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid;
+}
+
+.membersList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.memberChip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 3px;
+  background: white;
+  border: 1px solid;
+  border-radius: 20px;
+  cursor: grab;
+  transition: all 100ms;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.memberName {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.moreMembers {
+  display: flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #3d6ba3;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .gridLayout {
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 12px;
+  }
+  
+  .childrenGrid {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 900px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .headerLeft {
+    justify-content: center;
+  }
+  
+  .headerActions {
+    justify-content: center;
+  }
+  
+  .gridLayout {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .unitCard {
+    padding: 10px 12px;
+  }
+  
+  .childrenContainer {
+    margin-left: 12px;
+    padding-left: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .treeContainer {
+    padding: 12px;
+  }
+  
+  .unitContent {
+    gap: 6px;
+  }
+  
+  .unitActions {
+    gap: 2px;
+  }
+  
+  .actionButton {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .memberName {
+    max-width: 80px;
+  }
+  
+  .viewToggle {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .headerActions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .headerActions > button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .scrollArea {
+    max-height: 70vh;
+  }
+  
+  .unitCard {
+    padding: 8px 10px;
+    min-height: 45px;
+  }
+  
+  .unitName.root {
+    font-size: 0.875rem;
+  }
+  
+  .unitName.child {
+    font-size: 0.8rem;
+  }
+  
+  .childrenContainer {
+    margin-left: 8px;
+    padding-left: 8px;
+  }
+}
+
+/* Animation for smooth transitions */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.orgUnit {
+  animation: slideIn 200ms ease-out;
+}
+
+/* Drag and drop visual feedback */
+.dragOver {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.25) !important;
+}
+
+.dragOverMember {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Loading state */
+.loadingContainer {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 2px dashed rgba(226, 232, 240, 0.8);
+}
+
+.loadingText {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 12px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Organizational Chart View Styles */
+.orgChartContainer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px;
+  min-height: 600px;
+  min-width: 2000px;
+  width: max-content;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  overflow: visible;
+  position: relative;
+}
+
+.orgChartWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: max-content;
+}
+
+.roleCard {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+  transition: all 200ms;
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.roleCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.roleCard.dragging {
+  opacity: 0.7;
+  transform: rotate(2deg);
+}
+
+.childrenContainer {
+  position: relative;
+  margin-top: 15px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.childrenGrid {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  padding-top: 15px;
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+}
+
+.childWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Connection lines */
+.connectionLineVertical {
+  position: absolute;
+  width: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  transform: translateX(-50%);
+}
+
+.connectionLineHorizontal {
+  position: absolute;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Responsive card sizing based on depth */
+.roleCard.depth-0 {
+  width: 220px;
+  min-height: 140px;
+}
+
+.roleCard.depth-1 {
+  width: 205px;
+  min-height: 130px;
+}
+
+.roleCard.depth-2 {
+  width: 190px;
+  min-height: 120px;
+}
+
+.roleCard.depth-3 {
+  width: 180px;
+  min-height: 115px;
+}
+
+.roleCard.depth-4 {
+  width: 170px;
+  min-height: 110px;
+}
+
+/* Ensure proper spacing between levels */
+.orgLevel-0 .childrenGrid {
+  gap: 50px;
+}
+
+.orgLevel-1 .childrenGrid {
+  gap: 45px;
+}
+
+.orgLevel-2 .childrenGrid {
+  gap: 40px;
+}
+
+.orgLevel-3 .childrenGrid {
+  gap: 35px;
+}
+
+.orgLevel-4 .childrenGrid {
+  gap: 30px;
+}
+
+.roleIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+}
+
+.roleTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111827;
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.2;
+}
+
+.roleType {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.personInfo {
+  margin-bottom: 12px;
+  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.personDetails {
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.personName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.personPosition {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teamCount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.connectionLine {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.connectionLineVertical {
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.connectionLineHorizontal {
+  height: 2px;
+  transform: translateY(-1px);
+}
+
+.childrenContainer {
+  position: relative;
+  margin-top: 20px;
+}
+
+.childrenGrid {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding-top: 20px;
+}
+
+.expandButton {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 150ms;
+}
+
+.expandButton:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+/* Responsive adjustments for org chart */
+@media (max-width: 1200px) {
+  .childrenGrid {
+    gap: 30px;
+  }
+  
+  .roleCard {
+    min-width: 180px;
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 900px) {
+  .orgChartContainer {
+    padding: 15px;
+  }
+  
+  .childrenGrid {
+    gap: 20px;
+  }
+  
+  .roleCard {
+    min-width: 160px;
+    max-width: 200px;
+    padding: 12px;
+  }
+  
+  .roleTitle {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .orgChartContainer {
+    padding: 10px;
+  }
+  
+  .childrenGrid {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .roleCard {
+    min-width: 140px;
+    max-width: 180px;
+    padding: 10px;
+  }
+  
+  .roleTitle {
+    font-size: 0.8rem;
+  }
+  
+  .personName {
+    font-size: 0.75rem;
+  }
+}

@@ -1,0 +1,240 @@
+.header {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .header {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 130;
+    background: rgba(255, 255, 255, 0.86);
+    border-bottom: 1px solid rgba(203, 213, 225, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+}
+
+.left,
+.right {
+  flex: 1;
+  min-width: 0;
+}
+
+.center {
+  flex: 1.2;
+  min-width: 0;
+  text-align: center;
+}
+
+.right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.brandMark {
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #3d6ba3 0%, #aac7d7 52%, #aac7d7 100%);
+}
+
+.brandText {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text);
+}
+
+.title {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.menuBtn {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(203, 213, 225, 0.84);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border-color: transparent;
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 200px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.88);
+  margin-bottom: 10px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--primary-dark);
+}
+
+.username {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.role {
+  margin-top: 2px;
+  font-size: 11px;
+  text-transform: capitalize;
+  color: var(--text-secondary);
+}
+
+.menuItem {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(226, 232, 240, 0.88);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.88);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menuItem + .menuItem {
+  margin-top: 8px;
+}
+
+/* Actions slot (e.g. "+ Task" buttons) */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 140ms;
+}
+
+.actionBtnTask {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.32);
+}
+
+.actionBtnProject {
+  background: linear-gradient(135deg, var(--primary, #3d6ba3), #3d6ba3);
+  color: white;
+  box-shadow: 0 2px 8px rgba(61,107,163,0.32);
+}
+
+/* Filter tabs row */
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filterRow::-webkit-scrollbar { display: none; }
+
+.filterTab {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.72);
+  background: rgba(248, 250, 252, 0.88);
+  color: var(--text-secondary, #64748b);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 140ms;
+  flex-shrink: 0;
+}
+
+.filterTab:hover {
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--text, #0f172a);
+}
+
+.filterTabActive {
+  background: linear-gradient(135deg, var(--primary, #3d6ba3), #3d6ba3);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.35);
+}

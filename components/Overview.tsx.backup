@@ -1,0 +1,1129 @@
+'use client';
+
+import {
+  ArcElement, BarElement, CategoryScale, Chart as ChartJS,
+  Legend, LinearScale, Tooltip, LineElement, PointElement, Filler
+} from 'chart.js';
+import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import {
+  AlertTriangle, ArrowRight, Briefcase, CalendarClock, CheckCircle2,
+  Clock3, Flame, Gauge, ListTodo, TrendingUp, User, Zap
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { useState } from 'react';
+import styles from './Overview.module.css';
+
+ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, LineElement, PointElement, Filler);
+
+interface OverviewProps { data: any; user?: any; }
+
+const PRIORITY_COLOR: Record<string, string> = {
+  Urgent: '#ef4444', High: '#f97316', Normal: '#7c3aed', Low: '#10b981', Recurring: '#6366f1'
+};
+const STATUS_COLOR: Record<string, string> = {
+  Backlog: '#94a3b8', 'Minggu Ini': '#f59e0b', 'In Progress': '#3b82f6',
+  'On Hold': '#f97316', Done: '#10b981', Closed: '#64748b'
+};
+
+function pct(done: number, total: number) {
+  if (!total) return 0;
+  return Math.round((done / total) * 100);
+}
+
+function formatDue(date: any) {
+  if (!date) return null;
+  try { return format(new Date(date), 'dd MMM'); } catch { return null; }
+}
+
+export default function Overview({ data, user }: OverviewProps) {
+  const router = useRouter();
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  if (!data) {
+    return (
+      <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'60vh', flexDirection:'column', gap:'12px' }}>
+        <div style={{ width:'32px', height:'32px', border:'3px solid rgba(124,58,237,0.2)', borderTopColor:'#7c3aed', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+        <p style={{ color:'var(--tx4)', fontSize:'0.875rem' }}>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  const { stats, projects, tasks, myTasks = [], byStatus, byPriority, byCategory, weeklyProgress = [] } = data;
+
+  // Filter data based on selections
+  const filteredTasks = tasks.filter((task: any) => {
+    if (selectedStatus && task.status !== selectedStatus) return false;
+    if (selectedPriority && task.priority !== selectedPriority) return false;
+    return true;
+  });
+
+  const filteredProjects = projects.filter((project: any) => {
+    if (selectedCategory && project.category !== selectedCategory) return false;
+    return true;
+  });
+
+  // Completion rate
+  const completionRate = pct(stats.doneTasks, stats.totalTasks);
+
+  // Stat cards config
+  const statCards = [
+    {
+      label: 'Total Projects', value: stats.totalProjects,
+      sub: `${stats.activeProjects} active`, icon: Briefcase,
+      tone: 'default', action: () => router.push('/projects')
+    },
+    {
+      label: 'Active Tasks', value: stats.activeTasks,
+      sub: `${stats.totalTasks} total`, icon: ListTodo,
+      tone: 'default', action: () => router.push('/tasks')
+    },
+    {
+      label: 'Avg Progress', value: `${stats.avgProgress}%`,
+      sub: 'across all projects', icon: Gauge,
+      tone: 'success', action: null
+    },
+    {
+      label: 'Due Today', value: stats.dueToday,
+      sub: `${stats.dueThisWeek} this week`, icon: CalendarClock,
+      tone: stats.dueToday > 0 ? 'warning' : 'default', action: () => router.push('/tasks')
+    },
+    {
+      label: 'Urgent', value: stats.urgent,
+      sub: 'need attention', icon: Flame,
+      tone: stats.urgent > 0 ? 'danger' : 'default', action: () => router.push('/tasks')
+    },
+    {
+      label: 'Overdue', value: stats.overdue,
+      sub: 'past due date', icon: Clock3,
+      tone: stats.overdue > 0 ? 'danger' : 'default', action: () => router.push('/tasks')
+    },
+    {
+      label: 'Done Tasks', value: stats.doneTasks,
+      sub: `${completionRate}% completion`, icon: CheckCircle2,
+      tone: 'success', action: null
+    },
+  ] as const;
+
+  // Chart options
+  const doughnutOpts = {
+    responsive: true, maintainAspectRatio: false, cutout: '70%',
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' as const, padding: 12, font: { size: 11, family: 'DM Sans' } }
+      },
+      tooltip: { callbacks: { label: (ctx: any) => ` ${ctx.label}: ${ctx.raw}` } }
+    }
+  };
+
+  const barOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: any) => ` ${ctx.raw} tasks` } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11, family: 'DM Sans' } } },
+      y: { grid: { color: 'rgba(226,232,240,0.5)' }, ticks: { stepSize: 1, font: { size: 11, family: 'DM Sans' } } }
+    }
+  };
+
+  const lineOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11, family: 'DM Sans' } } },
+      y: { grid: { color: 'rgba(226,232,240,0.5)' }, ticks: { font: { size: 11, family: 'DM Sans' } } }
+    }
+  };
+
+  const mkDoughnut = (obj: Record<string, any>, colorMap?: Record<string, string>, fallbackColors?: string[]) => {
+    const keys = Object.keys(obj);
+    const colors = colorMap ? keys.map((k, i) => colorMap[k] || (fallbackColors || [])[i] || '#94a3b8') : (fallbackColors || []);
+    return { labels: keys, datasets: [{ data: Object.values(obj), backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] };
+  };
+
+  const statusData   = mkDoughnut(byStatus, STATUS_COLOR);
+  const priorityData = mkDoughnut(byPriority, PRIORITY_COLOR);
+  const categoryData = mkDoughnut(byCategory, undefined, ['#7c3aed','#6366f1','#3b82f6','#10b981','#f59e0b','#f97316','#ec4899']);
+
+  // Bar chart: tasks by project
+  const topProjects = [...projects].sort((a, b) => Number(b.task_count || 0) - Number(a.task_count || 0)).slice(0, 6);
+  const barData = {
+    labels: topProjects.map((p: any) => p.project_id),
+    datasets: [{
+      data: topProjects.map((p: any) => Number(p.task_count || 0)),
+      backgroundColor: 'rgba(124,58,237,0.75)',
+      borderRadius: 6,
+      hoverBackgroundColor: '#7c3aed'
+    }]
+  };
+
+  // Line chart: weekly trend
+  const last7 = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (6 - i));
+    return d.toISOString().split('T')[0];
+  });
+  const wpMap: Record<string, { created: number; done: number }> = {};
+  (weeklyProgress as any[]).forEach(r => { wpMap[r.day?.split('T')[0] || ''] = { created: Number(r.created), done: Number(r.done) }; });
+  const lineData = {
+    labels: last7.map(d => format(new Date(d), 'dd MMM')),
+    datasets: [
+      {
+        label: 'Created',
+        data: last7.map(d => wpMap[d]?.created || 0),
+        borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.08)',
+        tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#7c3aed'
+      },
+      {
+        label: 'Done',
+        data: last7.map(d => wpMap[d]?.done || 0),
+        borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)',
+        tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#10b981'
+      }
+    ]
+  };
+
+  const sortedProjects = [...filteredProjects].sort((a, b) => Number(b.progress || 0) - Number(a.progress || 0)).slice(0, 5);
+
+  // Recent tasks (last 5 updated) - filtered
+  const recentTasks = [...filteredTasks].sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 5);
+
+  return (
+    <div className={styles.layout}>
+      {/* ── Welcome bar ── */}
+      <div className={styles.welcomeBar}>
+        <div>
+          <h1 className={styles.welcomeTitle}>
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.full_name || user?.username || 'there'} 👋
+          </h1>
+          <p className={styles.welcomeSub}>
+            {stats.dueToday > 0
+              ? `You have ${stats.dueToday} task${stats.dueToday > 1 ? 's' : ''} due today and ${stats.activeTasks} active tasks.`
+              : `${stats.activeTasks} active tasks across ${stats.activeProjects} projects.`}
+          </p>
+        </div>
+        <div className={styles.welcomeActions}>
+          <button className={styles.quickBtn} onClick={() => router.push('/tasks')}>
+            <ListTodo size={14} /> My Tasks
+          </button>
+          <button className={styles.quickBtn} onClick={() => router.push('/calendar')}>
+            <CalendarClock size={14} /> Calendar
+          </button>
+        </div>
+      </div>
+
+      {/* ── Stat cards ── */}
+      <section className={styles.statsGrid}>
+        {statCards.map(card => {
+          const Icon = card.icon;
+          const toneClass = card.tone === 'default' ? '' : styles[`tone${card.tone[0].toUpperCase()}${card.tone.slice(1)}`];
+          return (
+            <article
+              key={card.label}
+              className={`${styles.statCard} ${toneClass} ${card.action ? styles.statCardClickable : ''}`}
+              onClick={card.action || undefined}
+            >
+              <div className={styles.statTop}>
+                <span>{card.label}</span>
+                <div className={styles.statIcon}><Icon size={16} /></div>
+              </div>
+              <strong>{card.value}</strong>
+              <p>{card.sub}</p>
+            </article>
+          );
+        })}
+      </section>
+
+      {/* ── Main grid ── */}
+      <div className={styles.mainGrid}>
+        {/* Left column */}
+        <div className={styles.leftCol}>
+          {/* Charts row */}
+          <div className={styles.chartsRow}>
+            {/* Task Status - Interactive Area Chart */}
+            <article className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <h2>Task Status</h2>
+                <p>Distribution by workflow stage</p>
+                {selectedStatus && (
+                  <button 
+                    onClick={() => setSelectedStatus(null)}
+                    style={{ 
+                      marginTop: '8px', 
+                      padding: '4px 10px', 
+                      fontSize: '0.75rem', 
+                      background: 'var(--brand-alpha)', 
+                      color: 'var(--brand)', 
+                      border: '1px solid rgba(124,58,237,0.2)', 
+                      borderRadius: 'var(--r1)', 
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Clear filter: {selectedStatus}
+                  </button>
+                )}
+              </div>
+              <div className={styles.areaChartWrap}>
+                {Object.keys(byStatus).length > 0 ? (
+                  (() => {
+                    const total = Object.values(byStatus).reduce((a: number, b: any) => a + Number(b), 0);
+                    const entries = Object.entries(byStatus).sort((a, b) => Number(b[1]) - Number(a[1]));
+                    
+                    return (
+                      <>
+                        <div className={styles.areaChartHeader}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                            {entries.map(([status, count]) => {
+                              const color = STATUS_COLOR[status] || '#f59e0b';
+                              const percentage = Math.round((Number(count) / total) * 100);
+                              const isSelected = selectedStatus === status;
+                              const isOtherSelected = selectedStatus && selectedStatus !== status;
+                              
+                              return (
+                                <div 
+                                  key={status}
+                                  onClick={() => setSelectedStatus(isSelected ? null : status)}
+                                  style={{ 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    gap: '6px', 
+                                    padding: '6px 12px',
+                                    fontSize: '0.75rem',
+                                    background: isSelected ? `${color}18` : 'rgba(255,255,255,0.5)',
+                                    border: `1.5px solid ${isSelected ? color : 'rgba(226,232,240,0.5)'}`,
+                                    borderRadius: 'var(--r2)',
+                                    cursor: 'pointer',
+                                    transition: 'all 200ms',
+                                    opacity: isOtherSelected ? 0.4 : 1,
+                                    transform: isSelected ? 'scale(1.05)' : 'scale(1)'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!isSelected) e.currentTarget.style.background = `${color}10`;
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.5)';
+                                  }}
+                                >
+                                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color }} />
+                                  <span style={{ color: 'var(--tx2)', fontWeight: 700 }}>{status}</span>
+                                  <span style={{ color: 'var(--tx3)', fontWeight: 600 }}>{count} ({percentage}%)</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <svg className={styles.areaChartSvg} viewBox="0 0 100 80" preserveAspectRatio="none">
+                          <defs>
+                            {entries.map(([status], idx) => {
+                              const color = STATUS_COLOR[status] || '#f59e0b';
+                              return (
+                                <linearGradient key={status} id={`statusGrad-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+                                  <stop offset="100%" stopColor={color} stopOpacity="0.03" />
+                                </linearGradient>
+                              );
+                            })}
+                          </defs>
+                          {entries.map(([status, count], idx) => {
+                            const color = STATUS_COLOR[status] || '#f59e0b';
+                            const isSelected = selectedStatus === status;
+                            const isOtherSelected = selectedStatus && selectedStatus !== status;
+                            
+                            // Generate unique wave for each status
+                            const dataPoints = Array.from({ length: 12 }, (_, i) => 
+                              2800 + Math.sin((i + idx * 3) * 0.5) * 400 + Math.random() * 200
+                            );
+                            const maxVal = Math.max(...dataPoints);
+                            const points = dataPoints.map((val, i) => ({
+                              x: (i / (dataPoints.length - 1)) * 100,
+                              y: 70 - ((val / maxVal) * 45) - (idx * 5)
+                            }));
+                            
+                            let pathD = `M ${points[0].x} ${points[0].y}`;
+                            for (let i = 0; i < points.length - 1; i++) {
+                              const current = points[i];
+                              const next = points[i + 1];
+                              const cp1x = current.x + (next.x - current.x) * 0.5;
+                              const cp1y = current.y;
+                              const cp2x = current.x + (next.x - current.x) * 0.5;
+                              const cp2y = next.y;
+                              pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
+                            }
+                            
+                            return (
+                              <g 
+                                key={status}
+                                style={{ 
+                                  cursor: 'pointer',
+                                  opacity: isOtherSelected ? 0.2 : 1,
+                                  transition: 'opacity 300ms'
+                                }}
+                                onClick={() => setSelectedStatus(isSelected ? null : status)}
+                              >
+                                <path
+                                  d={`${pathD} L 100 80 L 0 80 Z`}
+                                  fill={`url(#statusGrad-${idx})`}
+                                />
+                                <path
+                                  d={pathD}
+                                  fill="none"
+                                  stroke={color}
+                                  strokeWidth={isSelected ? "3.5" : "2.5"}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                {isSelected && (
+                                  <>
+                                    <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="5" fill={color} />
+                                    <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="2.5" fill="white" />
+                                  </>
+                                )}
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <div className={styles.emptyState}>No tasks yet</div>
+                )}
+              </div>
+            </article>
+
+            {/* Priority Focus - Interactive Area Chart */}
+            <article className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <h2>Priority Focus</h2>
+                <p>Comparison across all priorities</p>
+                {selectedPriority && (
+                  <button 
+                    onClick={() => setSelectedPriority(null)}
+                    style={{ 
+                      marginTop: '8px', 
+                      padding: '4px 10px', 
+                      fontSize: '0.75rem', 
+                      background: 'var(--brand-alpha)', 
+                      color: 'var(--brand)', 
+                      border: '1px solid rgba(124,58,237,0.2)', 
+                      borderRadius: 'var(--r1)', 
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Clear filter: {selectedPriority}
+                  </button>
+                )}
+              </div>
+              <div className={styles.areaChartWrap}>
+                {Object.keys(byPriority).length > 0 ? (
+                  (() => {
+                    const total = Object.values(byPriority).reduce((a: number, b: any) => a + Number(b), 0);
+                    const entries = Object.entries(byPriority).sort((a, b) => Number(b[1]) - Number(a[1]));
+                    
+                    return (
+                      <>
+                        <div className={styles.areaChartHeader}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                            {entries.map(([priority, count]) => {
+                              const color = PRIORITY_COLOR[priority] || '#f97316';
+                              const percentage = Math.round((Number(count) / total) * 100);
+                              const isSelected = selectedPriority === priority;
+                              const isOtherSelected = selectedPriority && selectedPriority !== priority;
+                              
+                              return (
+                                <div 
+                                  key={priority}
+                                  onClick={() => setSelectedPriority(isSelected ? null : priority)}
+                                  style={{ 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    gap: '6px', 
+                                    padding: '6px 12px',
+                                    fontSize: '0.75rem',
+                                    background: isSelected ? `${color}18` : 'rgba(255,255,255,0.5)',
+                                    border: `1.5px solid ${isSelected ? color : 'rgba(226,232,240,0.5)'}`,
+                                    borderRadius: 'var(--r2)',
+                                    cursor: 'pointer',
+                                    transition: 'all 200ms',
+                                    opacity: isOtherSelected ? 0.4 : 1,
+                                    transform: isSelected ? 'scale(1.05)' : 'scale(1)'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!isSelected) e.currentTarget.style.background = `${color}10`;
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.5)';
+                                  }}
+                                >
+                                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color }} />
+                                  <span style={{ color: 'var(--tx2)', fontWeight: 700 }}>{priority}</span>
+                                  <span style={{ color: 'var(--tx3)', fontWeight: 600 }}>{count} ({percentage}%)</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <svg className={styles.areaChartSvg} viewBox="0 0 100 80" preserveAspectRatio="none">
+                          <defs>
+                            {entries.map(([priority], idx) => {
+                              const color = PRIORITY_COLOR[priority] || '#f97316';
+                              return (
+                                <linearGradient key={priority} id={`priorityGrad-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+                                  <stop offset="100%" stopColor={color} stopOpacity="0.03" />
+                                </linearGradient>
+                              );
+                            })}
+                          </defs>
+                          {entries.map(([priority, count], idx) => {
+                            const color = PRIORITY_COLOR[priority] || '#f97316';
+                            const isSelected = selectedPriority === priority;
+                            const isOtherSelected = selectedPriority && selectedPriority !== priority;
+                            
+                            const dataPoints = Array.from({ length: 12 }, (_, i) => 
+                              2600 + Math.cos((i + idx * 2) * 0.6) * 500 + Math.random() * 250
+                            );
+                            const maxVal = Math.max(...dataPoints);
+                            const points = dataPoints.map((val, i) => ({
+                              x: (i / (dataPoints.length - 1)) * 100,
+                              y: 70 - ((val / maxVal) * 45) - (idx * 4)
+                            }));
+                            
+                            let pathD = `M ${points[0].x} ${points[0].y}`;
+                            for (let i = 0; i < points.length - 1; i++) {
+                              const current = points[i];
+                              const next = points[i + 1];
+                              const cp1x = current.x + (next.x - current.x) * 0.5;
+                              const cp1y = current.y;
+                              const cp2x = current.x + (next.x - current.x) * 0.5;
+                              const cp2y = next.y;
+                              pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
+                            }
+                            
+                            return (
+                              <g 
+                                key={priority}
+                                style={{ 
+                                  cursor: 'pointer',
+                                  opacity: isOtherSelected ? 0.2 : 1,
+                                  transition: 'opacity 300ms'
+                                }}
+                                onClick={() => setSelectedPriority(isSelected ? null : priority)}
+                              >
+                                <path
+                                  d={`${pathD} L 100 80 L 0 80 Z`}
+                                  fill={`url(#priorityGrad-${idx})`}
+                                />
+                                <path
+                                  d={pathD}
+                                  fill="none"
+                                  stroke={color}
+                                  strokeWidth={isSelected ? "3.5" : "2.5"}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                {isSelected && (
+                                  <>
+                                    <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="5" fill={color} />
+                                    <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="2.5" fill="white" />
+                                  </>
+                                )}
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <div className={styles.emptyState}>No tasks yet</div>
+                )}
+              </div>
+            </article>
+
+            {/* Category Mix - Interactive Stacked Area Charts */}
+            <article className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <h2>Category Mix</h2>
+                <p>Project categories distribution</p>
+                {selectedCategory && (
+                  <button 
+                    onClick={() => setSelectedCategory(null)}
+                    style={{ 
+                      marginTop: '8px', 
+                      padding: '4px 10px', 
+                      fontSize: '0.75rem', 
+                      background: 'var(--brand-alpha)', 
+                      color: 'var(--brand)', 
+                      border: '1px solid rgba(124,58,237,0.2)', 
+                      borderRadius: 'var(--r1)', 
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Clear filter: {selectedCategory}
+                  </button>
+                )}
+              </div>
+              <div className={styles.areaChartWrap}>
+                {Object.keys(byCategory).length > 0 ? (
+                  (() => {
+                    const total = Object.values(byCategory).reduce((a: number, b: any) => a + Number(b), 0);
+                    const categories = Object.entries(byCategory).sort((a, b) => Number(b[1]) - Number(a[1]));
+                    const colors = ['#7c3aed', '#6366f1', '#3b82f6', '#10b981'];
+                    
+                    const generateWave = (seed: number) => {
+                      const points = [];
+                      for (let i = 0; i <= 100; i += 8.33) {
+                        const y = 40 + Math.sin((i + seed) * 0.08) * 8;
+                        points.push({ x: i, y });
+                      }
+                      
+                      let pathD = `M ${points[0].x} ${points[0].y}`;
+                      for (let i = 0; i < points.length - 1; i++) {
+                        const current = points[i];
+                        const next = points[i + 1];
+                        const cp1x = current.x + (next.x - current.x) * 0.5;
+                        const cp1y = current.y;
+                        const cp2x = current.x + (next.x - current.x) * 0.5;
+                        const cp2y = next.y;
+                        pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
+                      }
+                      return { pathD, points };
+                    };
+                    
+                    return (
+                      <>
+                        <div className={styles.areaChartHeader}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                            {categories.map(([category, count], idx) => {
+                              const color = colors[idx % colors.length];
+                              const percentage = Math.round((Number(count) / total) * 100);
+                              const isSelected = selectedCategory === category;
+                              const isOtherSelected = selectedCategory && selectedCategory !== category;
+                              
+                              return (
+                                <div 
+                                  key={category}
+                                  onClick={() => setSelectedCategory(isSelected ? null : category)}
+                                  style={{ 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    gap: '6px', 
+                                    padding: '6px 12px',
+                                    fontSize: '0.75rem',
+                                    background: isSelected ? `${color}18` : 'rgba(255,255,255,0.5)',
+                                    border: `1.5px solid ${isSelected ? color : 'rgba(226,232,240,0.5)'}`,
+                                    borderRadius: 'var(--r2)',
+                                    cursor: 'pointer',
+                                    transition: 'all 200ms',
+                                    opacity: isOtherSelected ? 0.4 : 1,
+                                    transform: isSelected ? 'scale(1.05)' : 'scale(1)'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!isSelected) e.currentTarget.style.background = `${color}10`;
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.5)';
+                                  }}
+                                >
+                                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color }} />
+                                  <span style={{ color: 'var(--tx2)', fontWeight: 700 }}>{category}</span>
+                                  <span style={{ color: 'var(--tx3)', fontWeight: 600 }}>{count} ({percentage}%)</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <svg className={styles.areaChartSvg} viewBox="0 0 100 80" preserveAspectRatio="none">
+                          <defs>
+                            {categories.map(([category], idx) => {
+                              const color = colors[idx % colors.length];
+                              return (
+                                <linearGradient key={category} id={`categoryGrad-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+                                  <stop offset="100%" stopColor={color} stopOpacity="0.05" />
+                                </linearGradient>
+                              );
+                            })}
+                          </defs>
+                          {categories.map(([category], idx) => {
+                            const color = colors[idx % colors.length];
+                            const isSelected = selectedCategory === category;
+                            const isOtherSelected = selectedCategory && selectedCategory !== category;
+                            const { pathD, points } = generateWave(idx * 30);
+                            const yOffset = idx * 12;
+                            
+                            return (
+                              <g 
+                                key={category} 
+                                transform={`translate(0, ${yOffset})`}
+                                style={{ 
+                                  cursor: 'pointer',
+                                  opacity: isOtherSelected ? 0.2 : 1,
+                                  transition: 'opacity 300ms'
+                                }}
+                                onClick={() => setSelectedCategory(isSelected ? null : category)}
+                              >
+                                <path
+                                  d={`${pathD} L 100 80 L 0 80 Z`}
+                                  fill={`url(#categoryGrad-${idx})`}
+                                />
+                                <path
+                                  d={pathD}
+                                  fill="none"
+                                  stroke={color}
+                                  strokeWidth={isSelected ? "3.5" : "2.5"}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                {isSelected && (
+                                  <>
+                                    <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="5" fill={color} />
+                                    <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="2.5" fill="white" />
+                                  </>
+                                )}
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <div className={styles.emptyState}>No projects yet</div>
+                )}
+              </div>
+            </article>
+          </div>
+            {/* Task Status - Single Area Chart */}
+            <article className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <h2>Task Status</h2>
+                <p>Distribution by workflow stage</p>
+              </div>
+              <div className={styles.areaChartWrap}>
+                {Object.keys(byStatus).length > 0 ? (
+                  (() => {
+                    const total = Object.values(byStatus).reduce((a: number, b: any) => a + Number(b), 0);
+                    const entries = Object.entries(byStatus).sort((a, b) => Number(b[1]) - Number(a[1]));
+                    const [mainStatus, mainCount] = entries[0];
+                    const percentage = Math.round((Number(mainCount) / total) * 100);
+                    const color = STATUS_COLOR[mainStatus] || '#f59e0b';
+                    
+                    // Generate smooth wave - 12 months
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const dataPoints = [3200, 3100, 2900, 3400, 3000, 3200, 2800, 3000, 2900, 2800, 2900, 2700];
+                    const maxVal = Math.max(...dataPoints);
+                    const points = dataPoints.map((val, i) => ({
+                      x: (i / (dataPoints.length - 1)) * 100,
+                      y: 70 - ((val / maxVal) * 50)
+                    }));
+                    
+                    // Create smooth Bezier curve
+                    let pathD = `M ${points[0].x} ${points[0].y}`;
+                    for (let i = 0; i < points.length - 1; i++) {
+                      const current = points[i];
+                      const next = points[i + 1];
+                      const cp1x = current.x + (next.x - current.x) * 0.5;
+                      const cp1y = current.y;
+                      const cp2x = current.x + (next.x - current.x) * 0.5;
+                      const cp2y = next.y;
+                      pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
+                    }
+                    
+                    return (
+                      <>
+                        <div className={styles.areaChartHeader}>
+                          <div className={styles.areaChartStatus}>
+                            <span className={styles.areaChartLabel}>{mainStatus}</span>
+                            <span className={styles.areaChartTrend} style={{ color: '#10b981' }}>↑ {percentage}%</span>
+                          </div>
+                          <div className={styles.areaChartValue}>
+                            {mainCount}
+                            <span className={styles.areaChartPercent}>tasks</span>
+                          </div>
+                        </div>
+                        <svg className={styles.areaChartSvg} viewBox="0 0 100 80" preserveAspectRatio="none">
+                          <defs>
+                            <linearGradient id="statusGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+                              <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+                            </linearGradient>
+                          </defs>
+                          {/* Area fill */}
+                          <path
+                            d={`${pathD} L 100 80 L 0 80 Z`}
+                            fill="url(#statusGradient)"
+                          />
+                          {/* Line */}
+                          <path
+                            d={pathD}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          {/* End dot */}
+                          <circle
+                            cx={points[points.length - 1].x}
+                            cy={points[points.length - 1].y}
+                            r="4"
+                            fill={color}
+                          />
+                          <circle
+                            cx={points[points.length - 1].x}
+                            cy={points[points.length - 1].y}
+                            r="2"
+                            fill="white"
+                          />
+                        </svg>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <div className={styles.emptyState}>No tasks yet</div>
+                )}
+              </div>
+            </article>
+
+            {/* Priority Focus - Single Area Chart */}
+            <article className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <h2>Priority Focus</h2>
+                <p>Comparison across all priorities</p>
+              </div>
+              <div className={styles.areaChartWrap}>
+                {Object.keys(byPriority).length > 0 ? (
+                  (() => {
+                    const entries = Object.entries(byPriority).sort((a, b) => Number(b[1]) - Number(a[1]));
+                    const priorityList = entries.map(([name, count]) => `${name}: ${count}`).join(' • ');
+                    
+                    // Use first priority for main display
+                    const [mainPriority, mainCount] = entries[0];
+                    const color = PRIORITY_COLOR[mainPriority] || '#f97316';
+                    
+                    // Generate smooth wave
+                    const dataPoints = [2800, 3200, 3000, 3500, 3300, 3100, 2900, 3200, 3000, 2800, 3100, 2900];
+                    const maxVal = Math.max(...dataPoints);
+                    const points = dataPoints.map((val, i) => ({
+                      x: (i / (dataPoints.length - 1)) * 100,
+                      y: 70 - ((val / maxVal) * 50)
+                    }));
+                    
+                    let pathD = `M ${points[0].x} ${points[0].y}`;
+                    for (let i = 0; i < points.length - 1; i++) {
+                      const current = points[i];
+                      const next = points[i + 1];
+                      const cp1x = current.x + (next.x - current.x) * 0.5;
+                      const cp1y = current.y;
+                      const cp2x = current.x + (next.x - current.x) * 0.5;
+                      const cp2y = next.y;
+                      pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
+                    }
+                    
+                    return (
+                      <>
+                        <div className={styles.areaChartHeader}>
+                          <div style={{ marginBottom: '8px' }}>
+                            {entries.map(([priority, count]) => {
+                              const pColor = PRIORITY_COLOR[priority] || '#94a3b8';
+                              return (
+                                <div key={priority} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginRight: '12px', fontSize: '0.75rem' }}>
+                                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: pColor }} />
+                                  <span style={{ color: 'var(--tx3)', fontWeight: 600 }}>{priority}: {count}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <svg className={styles.areaChartSvg} viewBox="0 0 100 80" preserveAspectRatio="none">
+                          <defs>
+                            <linearGradient id="priorityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+                              <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+                            </linearGradient>
+                          </defs>
+                          <path
+                            d={`${pathD} L 100 80 L 0 80 Z`}
+                            fill="url(#priorityGradient)"
+                          />
+                          <path
+                            d={pathD}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="4" fill={color} />
+                          <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="2" fill="white" />
+                        </svg>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <div className={styles.emptyState}>No tasks yet</div>
+                )}
+              </div>
+            </article>
+
+            {/* Category Mix - Multiple Stacked Area Charts */}
+            <article className={styles.panel}>
+              <div className={styles.panelHeader}>
+                <h2>Category Mix</h2>
+                <p>Project categories distribution</p>
+              </div>
+              <div className={styles.areaChartWrap}>
+                {Object.keys(byCategory).length > 0 ? (
+                  (() => {
+                    const total = Object.values(byCategory).reduce((a: number, b: any) => a + Number(b), 0);
+                    const categories = Object.entries(byCategory).sort((a, b) => Number(b[1]) - Number(a[1]));
+                    const colors = ['#7c3aed', '#6366f1', '#3b82f6', '#10b981'];
+                    
+                    // Generate smooth waves for each category (stacked)
+                    const generateWave = (seed: number) => {
+                      const points = [];
+                      for (let i = 0; i <= 100; i += 8.33) {
+                        const y = 40 + Math.sin((i + seed) * 0.08) * 8;
+                        points.push({ x: i, y });
+                      }
+                      
+                      let pathD = `M ${points[0].x} ${points[0].y}`;
+                      for (let i = 0; i < points.length - 1; i++) {
+                        const current = points[i];
+                        const next = points[i + 1];
+                        const cp1x = current.x + (next.x - current.x) * 0.5;
+                        const cp1y = current.y;
+                        const cp2x = current.x + (next.x - current.x) * 0.5;
+                        const cp2y = next.y;
+                        pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
+                      }
+                      return pathD;
+                    };
+                    
+                    return (
+                      <>
+                        <div className={styles.areaChartHeader}>
+                          <div style={{ marginBottom: '8px' }}>
+                            {categories.map(([category, count], idx) => {
+                              const color = colors[idx % colors.length];
+                              const percentage = Math.round((Number(count) / total) * 100);
+                              return (
+                                <div key={category} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginRight: '10px', fontSize: '0.75rem' }}>
+                                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }} />
+                                  <span style={{ color: 'var(--tx3)', fontWeight: 600 }}>{category}: {count} ({percentage}%)</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <svg className={styles.areaChartSvg} viewBox="0 0 100 80" preserveAspectRatio="none">
+                          <defs>
+                            {categories.map(([category], idx) => {
+                              const color = colors[idx % colors.length];
+                              return (
+                                <linearGradient key={category} id={`categoryGrad-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+                                  <stop offset="100%" stopColor={color} stopOpacity="0.05" />
+                                </linearGradient>
+                              );
+                            })}
+                          </defs>
+                          {categories.map(([category], idx) => {
+                            const color = colors[idx % colors.length];
+                            const pathD = generateWave(idx * 30);
+                            const yOffset = idx * 12;
+                            
+                            return (
+                              <g key={category} transform={`translate(0, ${yOffset})`}>
+                                <path
+                                  d={`${pathD} L 100 80 L 0 80 Z`}
+                                  fill={`url(#categoryGrad-${idx})`}
+                                />
+                                <path
+                                  d={pathD}
+                                  fill="none"
+                                  stroke={color}
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <div className={styles.emptyState}>No projects yet</div>
+                )}
+              </div>
+            </article>
+          </div>
+
+          {/* Weekly trend */}
+          <article className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Weekly Activity</h2>
+              <p>Tasks created vs completed — last 7 days</p>
+              <div className={styles.legendRow}>
+                <span className={styles.legendDot} style={{ background: '#7c3aed' }} /> Created
+                <span className={styles.legendDot} style={{ background: '#10b981', marginLeft: 12 }} /> Done
+              </div>
+            </div>
+            <div style={{ height: 130 }}>
+              <Line data={lineData} options={lineOpts} />
+            </div>
+          </article>
+
+          {/* Tasks per project bar */}
+          <article className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Tasks per Project</h2>
+              <p>Workload distribution across projects</p>
+            </div>
+            <div style={{ height: 130 }}>
+              {topProjects.length > 0
+                ? <Bar data={barData} options={barOpts} />
+                : <div className={styles.emptyState}>No projects yet</div>}
+            </div>
+          </article>
+        </div>
+
+        {/* Right column */}
+        <div className={styles.rightCol}>
+          {/* My Tasks */}
+          <article className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2>My Tasks</h2>
+                  <p>Assigned to you, sorted by priority</p>
+                </div>
+                <button className={styles.viewAllBtn} onClick={() => router.push('/tasks')}>
+                  View all <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+            {myTasks.length === 0 ? (
+              <div className={styles.emptyState}>
+                <CheckCircle2 size={20} style={{ marginBottom: 8, opacity: 0.4 }} />
+                <p>No tasks assigned to you</p>
+              </div>
+            ) : (
+              <div className={styles.taskList}>
+                {myTasks.map((task: any) => {
+                  const due = formatDue(task.due_date);
+                  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'Done';
+                  const progress = parseInt(String(task.progress || '0').replace('%', '')) || 0;
+                  return (
+                    <div key={task.task_id} className={styles.taskItem}>
+                      <div className={styles.taskLeft}>
+                        <div className={styles.taskPriorityDot} style={{ background: PRIORITY_COLOR[task.priority] || '#94a3b8' }} />
+                        <div className={styles.taskInfo}>
+                          <div className={styles.taskName}>{task.task_name}</div>
+                          <div className={styles.taskMeta}>
+                            <span className={styles.taskProject}>{task.project_id}</span>
+                            {due && <span className={`${styles.taskDue} ${isOverdue ? styles.taskDueOverdue : ''}`}>
+                              <Clock3 size={11} /> {due}
+                            </span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.taskRight}>
+                        <span className={styles.taskStatus} style={{ background: `${STATUS_COLOR[task.status] || '#94a3b8'}18`, color: STATUS_COLOR[task.status] || '#94a3b8' }}>
+                          {task.status}
+                        </span>
+                        <div className={styles.taskProgress}>
+                          <div className={styles.taskProgressBar}>
+                            <div className={styles.taskProgressFill} style={{ width: `${progress}%` }} />
+                          </div>
+                          <span>{progress}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </article>
+
+          {/* Project Progress */}
+          <article className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2>Project Progress</h2>
+                  <p>Top projects by completion</p>
+                </div>
+                <button className={styles.viewAllBtn} onClick={() => router.push('/projects')}>
+                  View all <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+            {sortedProjects.length === 0 ? (
+              <div className={styles.emptyState}>No projects yet</div>
+            ) : (
+              <div className={styles.projectList}>
+                {sortedProjects.map((p: any) => {
+                  const pctVal = Number(p.progress || 0);
+                  return (
+                    <div key={p.project_id} className={styles.projectCard}>
+                      <div className={styles.projectHeader}>
+                        <div>
+                          <div className={styles.projectCode}>{p.project_id}</div>
+                          <h3>{p.project_name}</h3>
+                        </div>
+                        <div className={styles.projectMetric}>{pctVal.toFixed(0)}%</div>
+                      </div>
+                      <div className={styles.progressBar}>
+                        <div className={styles.progressFill} style={{ width: `${pctVal}%` }} />
+                      </div>
+                      <div className={styles.projectMeta}>
+                        <span>{p.category}</span>
+                        <span><User size={10} /> {p.owner || 'No owner'}</span>
+                        <span>{p.task_count || 0} tasks</span>
+                        <span className={`${styles.projectStatus} ${p.status === 'Active' ? styles.statusActive : ''}`}>{p.status}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </article>
+
+          {/* Recent Tasks */}
+          <article className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Recent Updates</h2>
+              <p>Latest task activity</p>
+            </div>
+            <div className={styles.recentList}>
+              {recentTasks.map((task: any) => (
+                <div key={task.task_id} className={styles.recentItem}>
+                  <div className={styles.recentIcon} style={{ background: `${PRIORITY_COLOR[task.priority] || '#94a3b8'}18` }}>
+                    <Zap size={13} style={{ color: PRIORITY_COLOR[task.priority] || '#94a3b8' }} />
+                  </div>
+                  <div className={styles.recentInfo}>
+                    <div className={styles.recentName}>{task.task_name}</div>
+                    <div className={styles.recentMeta}>{task.project_id} · {task.status}</div>
+                  </div>
+                  <div className={styles.recentTime}>
+                    {format(new Date(task.updated_at), 'dd MMM')}
+                  </div>
+                </div>
+              ))}
+              {recentTasks.length === 0 && <div className={styles.emptyState}>No recent activity</div>}
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  );
+}

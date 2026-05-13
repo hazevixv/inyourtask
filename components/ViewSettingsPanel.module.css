@@ -1,0 +1,520 @@
+/**
+ * ViewSettingsPanel Styles
+ * 
+ * Modal interface for view customization with responsive design.
+ * Full-screen on mobile (<768px), centered modal on desktop.
+ * 
+ * Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.12
+ */
+
+/* ============================================================================
+   Overlay & Modal Container
+   ============================================================================ */
+
+/**
+ * Semi-transparent backdrop overlay
+ * - rgba(0, 0, 0, 0.5) as specified in requirements
+ * - High z-index (1900) to display on top of all content
+ * - Flexbox for centering modal on desktop
+ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/**
+ * Modal content container
+ * - Centered modal on desktop
+ * - Max width for readability
+ * - Rounded corners with shadow
+ * - Raymaizing purple palette (#3d6ba3, #aac7d7)
+ */
+.modal {
+  width: min(100%, 680px);
+  max-height: min(90vh, 800px);
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================================
+   Header
+   ============================================================================ */
+
+/**
+ * Sticky header with title and close button
+ * - Stays at top during scroll
+ * - Backdrop blur for glass effect
+ */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 24px 24px 0 0;
+}
+
+.titleWrap {
+  flex: 1;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+/**
+ * Close button (X icon)
+ * - Minimum 44x44px touch target
+ * - Hover effects with purple accent
+ */
+.closeBtn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.85);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.3);
+  color: #3d6ba3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+}
+
+.closeBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.1);
+}
+
+/* Focus visible for keyboard navigation */
+.closeBtn:focus-visible {
+  outline: 2px solid #3d6ba3;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Body
+   ============================================================================ */
+
+/**
+ * Scrollable content area
+ * - Sections will be added in subsequent tasks
+ */
+.body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* Placeholder text for empty state */
+.placeholder {
+  margin: 0;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* ============================================================================
+   Sections
+   ============================================================================ */
+
+/**
+ * Section container
+ * - Collapsible sections with headers
+ */
+.section {
+  margin-bottom: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+}
+
+.sectionHeader {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(248, 250, 252, 0.8);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sectionHeader:hover {
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sectionContent {
+  padding: 16px;
+}
+
+/* ============================================================================
+   Layout Section (Radio Buttons)
+   ============================================================================ */
+
+.radioGroup {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.radioLabel:hover {
+  background: rgba(124, 58, 237, 0.05);
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.radioInput {
+  margin: 0;
+  cursor: pointer;
+}
+
+.radioInput:checked + * {
+  color: #3d6ba3;
+}
+
+.radioLabel:has(.radioInput:checked) {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: #3d6ba3;
+  color: #3d6ba3;
+}
+
+/* ============================================================================
+   Property Visibility Section (Checkboxes)
+   ============================================================================ */
+
+.propertyList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 0.9375rem;
+  color: var(--text);
+}
+
+.checkboxLabel:hover {
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.checkbox {
+  margin: 0;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.required {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* ============================================================================
+   Filter & Sort Sections (Chips and Builders)
+   ============================================================================ */
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #3d6ba3;
+}
+
+.chipText {
+  font-weight: 500;
+}
+
+.chipRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #3d6ba3;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.chipRemove:hover {
+  background: rgba(124, 58, 237, 0.2);
+}
+
+/* Builder interface */
+.builder {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 8px;
+}
+
+.select {
+  padding: 8px 12px;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-radius: 6px;
+  background: white;
+  font-size: 0.9375rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.select:hover {
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.select:focus {
+  outline: none;
+  border-color: #3d6ba3;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.input {
+  padding: 8px 12px;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-radius: 6px;
+  background: white;
+  font-size: 0.9375rem;
+  color: var(--text);
+  transition: border-color 0.2s ease;
+}
+
+.input:hover {
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3d6ba3;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.builderActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btnPrimary {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #3d6ba3;
+  color: white;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnPrimary:hover {
+  background: #84bbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.btnPrimary:active {
+  transform: translateY(0);
+}
+
+.btnSecondary {
+  flex: 1;
+  padding: 8px 16px;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-radius: 6px;
+  background: white;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnSecondary:hover {
+  background: rgba(248, 250, 252, 0.9);
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.btnAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px dashed rgba(124, 58, 237, 0.4);
+  border-radius: 6px;
+  background: rgba(124, 58, 237, 0.05);
+  color: #3d6ba3;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnAdd:hover {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: #3d6ba3;
+  transform: translateY(-1px);
+}
+
+/* ============================================================================
+   Mobile Responsive (<768px)
+   ============================================================================ */
+
+/**
+ * Full-screen layout on mobile
+ * - Takes entire viewport
+ * - Rounded top corners only
+ * - Slides up from bottom
+ */
+@media (max-width: 768px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: 95vh;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.15);
+  }
+
+  .header {
+    padding: 18px 20px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .closeBtn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .body {
+    padding: 20px;
+    /* Account for safe area on iOS devices */
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ============================================================================
+   Accessibility
+   ============================================================================ */
+
+/**
+ * Ensure all interactive elements have proper focus states
+ * and meet WCAG AA contrast requirements
+ */
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .closeBtn,
+  .modal {
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .modal {
+    border: 2px solid currentColor;
+  }
+
+  .closeBtn {
+    border: 2px solid currentColor;
+  }
+}
