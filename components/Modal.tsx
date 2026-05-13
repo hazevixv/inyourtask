@@ -14,7 +14,7 @@ interface ModalProps {
   currentUser?: string;
   initialValues?: Record<string, any> | null;
   onClose: () => void;
-  onSave: (formData: any) => void;
+  onSave: (formData: any) => void | Promise<void>;
   onMinimize?: () => void;
 }
 
@@ -41,6 +41,7 @@ export default function Modal({
   const [history, setHistory] = useState<any[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'workflow'>('details');
   const [workflow, setWorkflow] = useState<any>(null);
@@ -453,8 +454,9 @@ export default function Modal({
     }));
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (isSubmitting) return;
 
     const submitData = {
       ...formData,
@@ -462,9 +464,13 @@ export default function Modal({
       owner: isTask ? undefined : formData.owner || selectedAssignees[0] || currentUser || ''
     };
 
-    // Clear draft after successful save
-    clearDraft();
-    onSave(submitData);
+    try {
+      setIsSubmitting(true);
+      await Promise.resolve(onSave(submitData));
+      clearDraft();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const title = `${editId ? 'Edit' : 'New'} ${isTask ? 'Task' : 'Project'}`;
@@ -951,7 +957,7 @@ export default function Modal({
           <div className={styles.footer}>
             {activeTab === 'details' ? (
               <>
-            <button type="button" className={styles.btn} onClick={onClose}>
+            <button type="button" className={styles.btn} onClick={onClose} disabled={isSubmitting}>
               Cancel
             </button>
             {isTask && editId && formData.due_date && (
@@ -959,6 +965,7 @@ export default function Modal({
                 type="button"
                 className={styles.btn}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                disabled={isSubmitting}
                 onClick={async () => {
                   try {
                     await fetch('/api/calendar', {
@@ -983,12 +990,12 @@ export default function Modal({
                 <CalendarDays size={14} /> Add to Calendar
               </button>
             )}
-            <button type="submit" className={styles.btnPrimary}>
-              {editId ? 'Save Changes' : `Create ${isTask ? 'Task' : 'Project'}`}
+            <button type="submit" className={styles.btnPrimary} disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : editId ? 'Save Changes' : `Create ${isTask ? 'Task' : 'Project'}`}
             </button>
               </>
             ) : (
-              <button type="button" className={styles.btn} onClick={onClose}>
+              <button type="button" className={styles.btn} onClick={onClose} disabled={isSubmitting}>
                 Close
               </button>
             )}

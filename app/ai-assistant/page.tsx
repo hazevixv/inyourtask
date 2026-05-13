@@ -3,14 +3,19 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamicImport from 'next/dynamic';
 import AppShell from '@/components/Sidebar';
-import AIAssistant from '@/components/AIAssistant';
 import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
 import BottomNav from '@/components/BottomNav';
 import MobileHeader from '@/components/MobileHeader';
 import PageLoader from '@/components/PageLoader';
 import { useApp } from '@/lib/AppContext';
+
+const AIAssistant = dynamicImport(() => import('@/components/AIAssistant'), {
+  ssr: false,
+  loading: () => <PageLoader />
+});
 
 export default function AIAssistantPage() {
   const router = useRouter();
@@ -34,7 +39,12 @@ export default function AIAssistantPage() {
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
       const json = await res.json();
       if (json.success) {
-        showToast(`${modalType} created!`, 'success');
+        showToast(
+          json.duplicatePrevented
+            ? `Duplicate click ignored. ${modalType} only created once.`
+            : `${modalType} created!`,
+          json.duplicatePrevented ? 'info' : 'success'
+        );
         closeModal();
         await loadData();
         if (modalType === 'project') await loadConfig();

@@ -67,16 +67,6 @@ export default function ViewSystem({
   onEdit,
   onDelete,
 }: ViewSystemProps) {
-  // Debug logging
-  console.log('[ViewSystem] Rendering:', {
-    type,
-    dataLength: data?.length || 0,
-    projectsLength: projects?.length || 0,
-    mobileFilter,
-    currentUser,
-    data: data?.slice(0, 2) // Log first 2 items for debugging
-  });
-
   // ============================================================================
   // State Management
   // ============================================================================
@@ -133,25 +123,15 @@ export default function ViewSystem({
    */
   const processedData = useMemo(() => {
     try {
-      console.log('[ViewSystem] Processing data:', {
-        inputDataLength: data?.length || 0,
-        filters: preferences.filters,
-        sorts: preferences.sorts,
-        groupBy: preferences.groupBy
-      });
-
       // Step 1: Apply filters
       let filtered = applyFilters(data, preferences.filters);
-      console.log('[ViewSystem] After filters:', filtered?.length || 0);
 
       // Step 2: Apply sorts
       let sorted = applySorts(filtered, preferences.sorts);
-      console.log('[ViewSystem] After sorts:', sorted?.length || 0);
 
       // Step 3: Apply grouping (Tasks only)
       if (type === 'tasks' && preferences.groupBy === 'project') {
         const grouped = applyGrouping(sorted, projects, preferences.collapsedGroups || []);
-        console.log('[ViewSystem] After grouping:', grouped);
         return grouped;
       }
 

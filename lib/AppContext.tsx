@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface AppContextType {
   user: any;
@@ -11,8 +11,8 @@ interface AppContextType {
   activeWorkspace: any;
   loading: boolean;
   authChecked: boolean;
-  loadData: () => Promise<void>;
-  loadConfig: () => Promise<void>;
+  loadData: (force?: boolean) => Promise<void>;
+  loadConfig: (force?: boolean) => Promise<void>;
   setActiveWorkspace: (workspaceId: string) => Promise<void>;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   toast: { message: string; type: 'success' | 'error' | 'info' } | null;
@@ -25,6 +25,26 @@ const AppContext = createContext<AppContextType | null>(null);
 // Key format: `${username}:${type}` to prevent cross-user cache pollution
 const cache: Record<string, { value: any; ts: number }> = {};
 const CACHE_TTL = 30_000; // 30 seconds
+
+function routeNeedsDashboard(pathname: string | null) {
+  if (!pathname) return false;
+  return (
+    pathname === '/' ||
+    pathname === '/dashboard' ||
+    pathname.startsWith('/calendar') ||
+    pathname.startsWith('/ai-assistant')
+  );
+}
+
+function routeNeedsConfig(pathname: string | null) {
+  if (!pathname) return false;
+  return (
+    pathname === '/' ||
+    pathname.startsWith('/calendar') ||
+    pathname.startsWith('/brain') ||
+    pathname.startsWith('/ai-assistant')
+  );
+}
 
 function getCached(key: string) {
   const entry = cache[key];
@@ -48,6 +68,7 @@ function clearUserCache(username?: string) {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [data, setData] = useState<any>(null);
   const [config, setConfig] = useState<any>(null);
@@ -69,11 +90,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toastTimer.current = setTimeout(() => setToast(null), 3000);
   }, []);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (force = false) => {
     const username = currentUsername.current;
     const workspaceId = activeWorkspaceRef.current?.workspace_id || 'none';
     const cacheKey = username ? `${username}:${workspaceId}:data` : 'anon:data';
-    const cached = getCached(cacheKey);
+    const cached = !force ? getCached(cacheKey) : null;
     if (cached) { setData(cached); setLoading(false); return; }
     
     if (loadDataInFlight.current) return;
@@ -81,7 +102,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     try {
       setLoading(true);
-      const res = await fetch('/api/dashboard', {
+      const endpoint = force ? '/api/dashboard?nocache=1' : '/api/dashboard';
+      const res = await fetch(endpoint, {
         credentials: 'include',
         cache: 'no-store'
       });
@@ -121,11 +143,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [router]);
 
-  const loadConfig = useCallback(async () => {
+  const loadConfig = useCallback(async (force = false) => {
     const username = currentUsername.current;
     const workspaceId = activeWorkspaceRef.current?.workspace_id || 'none';
     const cacheKey = username ? `${username}:${workspaceId}:config` : 'anon:config';
-    const cached = getCached(cacheKey);
+    const cached = !force ? getCached(cacheKey) : null;
     if (cached) { setConfig(cached); return; }
     if (loadConfigInFlight.current) return;
     loadConfigInFlight.current = true;
@@ -135,7 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         // Add timestamp to bypass browser cache
         const timestamp = Date.now();
-        const res = await fetch(`/api/config?t=${timestamp}`, { credentials: 'include', cache: 'no-store' });
+        const res = await fetch(`/api/config?t=${timestamp}${force ? '&nocache=1' : ''}`, { credentials: 'include', cache: 'no-store' });
         if (!res.ok) throw new Error(`Config API returned ${res.status}`);
         
         const json = await res.json();
@@ -173,14 +195,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const username = currentUsername.current;
     if (username) clearUserCache(username);
     loadDataInFlight.current = false;
-    await loadData();
+    await loadData(true);
   }, [loadData]);
 
   const refreshConfig = useCallback(async () => {
     const username = currentUsername.current;
     if (username) clearUserCache(username);
     loadConfigInFlight.current = false;
-    await loadConfig();
+    await loadConfig(true);
   }, [loadConfig]);
 
   const handleLogout = useCallback(async () => {
@@ -261,12 +283,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           
           currentUsername.current = newUser.username;
           setUser(newUser);
-          setWorkspaces(incomingWorkspaces);
-          setActiveWorkspaceState(incomingActiveWorkspace);
-          activeWorkspaceRef.current = incomingActiveWorkspace;
-          setAuthChecked(true);
-          // Load data and config in parallel, don't block auth
-          Promise.all([loadData(), loadConfig()]).catch(() => {});
+        setWorkspaces(incomingWorkspaces);
+        setActiveWorkspaceState(incomingActiveWorkspace);
+        activeWorkspaceRef.current = incomingActiveWorkspace;
+        setAuthChecked(true);
+          // Only load expensive shared resources for routes that actually need them
+          const jobs: Promise<void>[] = [];
+          if (routeNeedsDashboard(pathname)) jobs.push(loadData());
+          if (routeNeedsConfig(pathname)) jobs.push(loadConfig());
+          Promise.all(jobs).catch(() => {});
         } else {
           setAuthChecked(true);
           router.replace('/login');
@@ -285,7 +310,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     init();
-  }, [loadData, loadConfig, router]);
+  }, [loadData, loadConfig, pathname, router]);
+
+  useEffect(() => {
+    if (!authChecked || !user) return;
+
+    const jobs: Promise<void>[] = [];
+
+    if (routeNeedsDashboard(pathname) && !data && !loadDataInFlight.current) {
+      jobs.push(loadData());
+    }
+
+    if (routeNeedsConfig(pathname) && !config && !loadConfigInFlight.current) {
+      jobs.push(loadConfig());
+    }
+
+    if (jobs.length > 0) {
+      Promise.all(jobs).catch(() => {});
+    }
+  }, [authChecked, user, pathname, data, config, loadData, loadConfig]);
 
   useEffect(() => {
     activeWorkspaceRef.current = activeWorkspace;

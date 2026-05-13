@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/Sidebar';
 import ViewSystem from '@/components/ViewSystem';
@@ -20,16 +20,58 @@ const PROJECT_FILTERS = [
   { id: 'mine', label: 'My Projects' },
 ];
 
+const projectsCache: Record<string, { ts: number; projects: any[] }> = {};
+const PROJECTS_CACHE_TTL = 30_000;
+
 export default function ProjectsPage() {
   const router = useRouter();
-  const { user, data, config, authChecked, loadData, loadConfig, showToast, toast, handleLogout } = useApp();
+  const { user, config, authChecked, loadConfig, showToast, toast, handleLogout, activeWorkspace } = useApp();
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [mobileFilter, setMobileFilter] = useState<'all' | 'mine'>('all');
+  const [projectsData, setProjectsData] = useState<any[]>([]);
+  const [pageLoading, setPageLoading] = useState(true);
 
   const nav = (tab: string) => router.push(tab === 'overview' ? '/' : `/${tab === 'ai' ? 'ai-assistant' : tab}`);
-  const openModal = (id: string | null = null) => { setEditId(id); setModalOpen(true); };
+  const openModal = async (id: string | null = null) => {
+    setEditId(id);
+    if (!config) await loadConfig();
+    setModalOpen(true);
+  };
   const closeModal = () => { setModalOpen(false); setEditId(null); };
+
+  const loadProjects = useCallback(async (force = false) => {
+    const workspaceKey = activeWorkspace?.workspace_id || 'default';
+    const cached = projectsCache[workspaceKey];
+
+    if (!force && cached && Date.now() - cached.ts < PROJECTS_CACHE_TTL) {
+      setProjectsData(cached.projects);
+      setPageLoading(false);
+      return;
+    }
+
+    try {
+      setPageLoading(true);
+      const res = await fetch('/api/projects', { credentials: 'include' });
+      const json = await res.json();
+      if (json.success) {
+        const nextProjects = json.data || [];
+        projectsCache[workspaceKey] = { ts: Date.now(), projects: nextProjects };
+        setProjectsData(nextProjects);
+      } else {
+        showToast(json.error || 'Failed to load projects', 'error');
+      }
+    } catch {
+      showToast('Error loading projects', 'error');
+    } finally {
+      setPageLoading(false);
+    }
+  }, [activeWorkspace?.workspace_id, showToast]);
+
+  useEffect(() => {
+    if (!authChecked || !user) return;
+    loadProjects();
+  }, [authChecked, user, loadProjects]);
   
   /**
    * Handle mobile filter change with type safety
@@ -48,7 +90,7 @@ export default function ProjectsPage() {
    * applies its own filters on top of this filtered data (AND logic).
    */
   const filteredProjects = useMemo(() => {
-    const projects = data?.projects ?? [];
+    const projects = projectsData ?? [];
     
     // Apply MobileHeader filter
     if (mobileFilter === 'mine' && user?.username) {
@@ -61,35 +103,41 @@ export default function ProjectsPage() {
     }
     
     return projects;
-  }, [data?.projects, mobileFilter, user?.username]);
+  }, [projectsData, mobileFilter, user?.username]);
 
-  const handleSave = async (formData: any) => {
+  const handleSave = useCallback(async (formData: any) => {
     try {
       const method = editId ? 'PUT' : 'POST';
       const url = editId ? `/api/projects/${editId}` : '/api/projects';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
       const json = await res.json();
       if (json.success) {
-        showToast(editId ? 'Project updated!' : `Project created!`, 'success');
+        showToast(
+          json.duplicatePrevented
+            ? 'Duplicate click ignored. Project only created once.'
+            : editId ? 'Project updated!' : 'Project created!',
+          json.duplicatePrevented ? 'info' : 'success'
+        );
         closeModal();
-        await Promise.all([loadData(), loadConfig()]);
+        await loadProjects(true);
       } else showToast(`Error: ${json.error}`, 'error');
     } catch { showToast('Error saving', 'error'); }
-  };
+  }, [editId, loadProjects, showToast]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm(`Delete project ${id}?`)) return;
     try {
       const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
-      const json = await res.json();
-      if (json.success) {
-        showToast('Project deleted!', 'success');
-        await Promise.all([loadData(), loadConfig()]);
-      } else showToast(`Error: ${json.error}`, 'error');
+        const json = await res.json();
+        if (json.success) {
+          showToast('Project deleted!', 'success');
+          await loadProjects(true);
+        } else showToast(`Error: ${json.error}`, 'error');
     } catch { showToast('Error deleting', 'error'); }
-  };
+  }, [loadProjects, showToast]);
 
   if (!authChecked) return <PageLoader />;
+  if (pageLoading) return <PageLoader />;
 
   const mobileActions = (
     <button className={`${headerStyles.actionBtn} ${headerStyles.actionBtnProject}`} onClick={() => openModal()}>
@@ -127,11 +175,11 @@ export default function ProjectsPage() {
       />
       <BottomNav activeTab="projects" onTabChange={nav} />
       <FAB onNewTask={() => router.push('/tasks')} onNewProject={() => openModal()} />
-      {modalOpen && data && config && (
+      {modalOpen && config && (
         <Modal 
           type="project" 
           editId={editId} 
-          data={data} 
+          data={{ projects: projectsData, tasks: [] }} 
           config={config} 
           currentUser={user?.username} 
           onClose={closeModal} 

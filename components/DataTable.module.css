@@ -3,8 +3,6 @@
 ═══════════════════════════════════════════ */
 .card {
   background: var(--glass);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
   border: 1px solid var(--glass-border);
   border-radius: var(--r5);
   padding: 24px;
@@ -140,8 +138,7 @@
   height: 34px; padding: 0 14px;
   border: 1px solid rgba(226,232,240,0.75);
   border-radius: var(--r1);
-  background: rgba(255,255,255,0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.96);
   color: var(--tx2);
   font-size: 0.875rem; font-weight: 600;
   font-family: 'DM Sans', sans-serif;
@@ -176,7 +173,6 @@
   padding: 18px; border-radius: var(--r4);
   border: 1px solid var(--glass-border);
   background: var(--glass);
-  backdrop-filter: blur(12px);
   box-shadow: var(--sh-xs);
 }
 .mobileCard + .mobileCard { margin-top: 12px; }

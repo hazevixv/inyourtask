@@ -128,15 +128,6 @@ function renderTaskRow(
   onDelete: (id: string) => void,
   index: number
 ) {
-  // Debug logging
-  console.log('[renderTaskRow] Task data:', {
-    task_id: task.task_id,
-    task_name: task.task_name,
-    taskName: task.taskName,
-    name: task.name,
-    allKeys: Object.keys(task)
-  });
-
   const assignees = splitCsv(task.assignees);
   const progressValue = Number(String(task.progress || '0').replace('%', '')) || 0;
   
@@ -347,30 +338,17 @@ export default function DataTable({
   onEdit,
   onDelete,
 }: DataTableProps) {
-  // Debug logging
-  console.log('[DataTable] Rendering:', {
-    type,
-    dataLength: data?.length || 0,
-    hasData: !!data,
-    isArray: Array.isArray(data),
-    visibleColumns,
-    firstItem: data?.[0]
-  });
-
   /**
    * Render empty state when no data
    * Requirements: 14.4
    */
   if (!data || data.length === 0) {
-    console.log('[DataTable] Showing empty state');
     return (
       <div className={styles.emptyState}>
         No {type} found.
       </div>
     );
   }
-
-  console.log('[DataTable] Rendering table with', data.length, 'items');
 
   /**
    * Render table based on type

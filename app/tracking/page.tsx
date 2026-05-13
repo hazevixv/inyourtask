@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { Suspense, useMemo, useState, useEffect } from 'react';
+import { Suspense, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format, differenceInDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns';
 import {
@@ -16,6 +16,9 @@ import MobileHeader from '@/components/MobileHeader';
 import PageLoader from '@/components/PageLoader';
 import { useApp } from '@/lib/AppContext';
 import styles from './tracking.module.css';
+
+const trackingCache: Record<string, { ts: number; logs: any[] }> = {};
+const TRACKING_CACHE_TTL = 30_000;
 
 const CHANGE_META: Record<string, { icon: any; label: string; color: string }> = {
   Name:         { icon: FileEdit,    label: 'Name Changed', color: '#3b82f6' },
@@ -101,7 +104,9 @@ export default function TrackingPage() {
 function TrackingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, data, authChecked, toast, handleLogout, showToast } = useApp();
+  const { user, authChecked, toast, handleLogout, showToast, activeWorkspace } = useApp();
+  const [logsData, setLogsData] = useState<any[]>([]);
+  const [pageLoading, setPageLoading] = useState(true);
   
   const [filter, setFilter] = useState<'all' | 'project' | 'task'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -118,7 +123,40 @@ function TrackingContent() {
 
   const nav = (tab: string) => router.push(tab === 'overview' ? '/' : `/${tab === 'ai' ? 'ai-assistant' : tab}`);
 
-  const logs = useMemo(() => data?.logs || [], [data]);
+  const loadLogs = useCallback(async (force = false) => {
+    const workspaceKey = activeWorkspace?.workspace_id || 'default';
+    const cached = trackingCache[workspaceKey];
+
+    if (!force && cached && Date.now() - cached.ts < TRACKING_CACHE_TTL) {
+      setLogsData(cached.logs);
+      setPageLoading(false);
+      return;
+    }
+
+    try {
+      setPageLoading(true);
+      const res = await fetch('/api/logs', { credentials: 'include' });
+      const json = await res.json();
+      if (json.success) {
+        const nextLogs = json.data || [];
+        trackingCache[workspaceKey] = { ts: Date.now(), logs: nextLogs };
+        setLogsData(nextLogs);
+      } else {
+        showToast(json.error || 'Failed to load activity log', 'error');
+      }
+    } catch {
+      showToast('Error loading activity log', 'error');
+    } finally {
+      setPageLoading(false);
+    }
+  }, [activeWorkspace?.workspace_id, showToast]);
+
+  useEffect(() => {
+    if (!authChecked || !user) return;
+    loadLogs();
+  }, [authChecked, user, loadLogs]);
+
+  const logs = useMemo(() => logsData || [], [logsData]);
   
   // Get unique change types for filter
   const changeTypes = useMemo(() => {
@@ -341,7 +379,7 @@ function TrackingContent() {
     }
   };
 
-  if (!authChecked) return <PageLoader />;
+  if (!authChecked || pageLoading) return <PageLoader />;
 
   return (
     <>

@@ -109,7 +109,7 @@ function SignupContent() {
               <path d="M14 24L21 31L34 17" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
               <defs>
                 <linearGradient id="grad" x1="0" y1="0" x2="48" y2="48">
-                  <stop offset="0%" stopColor="#3d6ba3" />
+                  <stop offset="0%" stopColor="#4a7ba5" />
                   <stop offset="100%" stopColor="#22c55e" />
                 </linearGradient>
               </defs>
@@ -185,7 +185,7 @@ function SignupContent() {
                 <div className={styles.inputWrapper}>
                   <Lock size={20} className={styles.inputIcon} />
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••" required className={styles.input} />
+                    placeholder="Create a secure password" required className={styles.input} />
                 </div>
               </div>
             </div>

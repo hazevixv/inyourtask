@@ -109,7 +109,7 @@ function LoginContent() {
               <path d="M14 24L21 31L34 17" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
               <defs>
                 <linearGradient id="gradient" x1="0" y1="0" x2="48" y2="48">
-                  <stop offset="0%" stopColor="#7c3aed" />
+                  <stop offset="0%" stopColor="#4a7ba5" />
                   <stop offset="100%" stopColor="#22c55e" />
                 </linearGradient>
               </defs>
@@ -162,7 +162,7 @@ function LoginContent() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   required
                   className={styles.input}
                 />

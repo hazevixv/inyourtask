@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getRequestWorkspaceContext, buildWorkspaceEntityScope } from '@/lib/workspace-context';
 
+const dashboardCache: Record<string, { ts: number; payload: any }> = {};
+const DASHBOARD_CACHE_TTL = 15_000;
+
 export async function GET(request: NextRequest) {
   try {
     const { user, activeWorkspace, memberUsernames } = await getRequestWorkspaceContext(request);
@@ -9,10 +12,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const activeWorkspaceId = activeWorkspace?.workspace_id || null;
+    const noCache = request.nextUrl.searchParams.get('nocache') === '1';
+    const activeWorkspaceId = activeWorkspace?.workspace_id || 'none';
+    const cacheKey = `${user.username}:${activeWorkspaceId}`;
+
+    if (!noCache) {
+      const cached = dashboardCache[cacheKey];
+      if (cached && Date.now() - cached.ts < DASHBOARD_CACHE_TTL) {
+        return NextResponse.json(cached.payload, {
+          headers: { 'Cache-Control': 'private, max-age=10, stale-while-revalidate=30' }
+        });
+      }
+    }
+
+    const workspaceIdForScope = activeWorkspace?.workspace_id || null;
     const scopeUsernames = memberUsernames.length > 0 ? memberUsernames : [user.username];
-    const projectScope = buildWorkspaceEntityScope('p', activeWorkspaceId, scopeUsernames);
-    const taskScope = buildWorkspaceEntityScope('t', activeWorkspaceId, scopeUsernames, {
+    const projectScope = buildWorkspaceEntityScope('p', workspaceIdForScope, scopeUsernames);
+    const taskScope = buildWorkspaceEntityScope('t', workspaceIdForScope, scopeUsernames, {
       ownerColumn: 'assignee',
       assigneeColumn: 'assignees'
     });
@@ -119,7 +135,7 @@ export async function GET(request: NextRequest) {
       dueThisWeek: (stats[9] as any)?.dueThisWeek,
     } as Record<string, any>;
 
-    return NextResponse.json({
+    const payload = {
       success: true,
       data: {
         stats: {
@@ -145,8 +161,12 @@ export async function GET(request: NextRequest) {
         byCategory: byCategoryObj,
         activeWorkspace
       }
-    }, {
-      headers: { 'Cache-Control': 'no-store' }
+    };
+
+    dashboardCache[cacheKey] = { ts: Date.now(), payload };
+
+    return NextResponse.json(payload, {
+      headers: { 'Cache-Control': 'private, max-age=10, stale-while-revalidate=30' }
     });
   } catch (error: any) {
     console.error('[Dashboard API] Error:', error);
@@ -163,7 +183,7 @@ export async function GET(request: NextRequest) {
       }
     }, {
       status: 200,
-      headers: { 'Cache-Control': 'no-store' }
+      headers: { 'Cache-Control': 'private, max-age=5, stale-while-revalidate=15' }
     });
   }
 }

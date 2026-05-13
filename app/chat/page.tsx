@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   Bot, MessageSquare, Plus, Search, Send, Users, X, Loader2,
   MoreVertical, Info, ChevronDown, ArrowLeft, Reply, Edit2,
@@ -16,18 +17,19 @@ import MobileHeader from '@/components/MobileHeader';
 import PageLoader from '@/components/PageLoader';
 import Toast from '@/components/Toast';
 import MessageRenderer from '@/components/chat/MessageRenderer';
-import VoiceRecorder from '@/components/chat/VoiceRecorder';
-import FileUploader from '@/components/chat/FileUploader';
-import EmojiPicker from '@/components/chat/EmojiPicker';
-import NewChatModal from '@/components/chat/NewChatModal';
-import ChatInfoPanel from '@/components/chat/ChatInfoPanel';
-import AIAgentPanel from '@/components/chat/AIAgentPanel';
-import AttachmentMenu from '@/components/chat/AttachmentMenu';
-import ChatHeaderMenu from '@/components/chat/ChatHeaderMenu';
-import ChatSessionsSidebar from '@/components/chat/ChatSessionsSidebar';
 import { useApp } from '@/lib/AppContext';
 import { getAvatarUrl } from '@/lib/utils';
 import styles from './Chat.module.css';
+
+const VoiceRecorder = dynamic(() => import('@/components/chat/VoiceRecorder'), { ssr: false });
+const FileUploader = dynamic(() => import('@/components/chat/FileUploader'), { ssr: false });
+const EmojiPicker = dynamic(() => import('@/components/chat/EmojiPicker'), { ssr: false });
+const NewChatModal = dynamic(() => import('@/components/chat/NewChatModal'), { ssr: false });
+const ChatInfoPanel = dynamic(() => import('@/components/chat/ChatInfoPanel'), { ssr: false });
+const AIAgentPanel = dynamic(() => import('@/components/chat/AIAgentPanel'), { ssr: false });
+const AttachmentMenu = dynamic(() => import('@/components/chat/AttachmentMenu'), { ssr: false });
+const ChatHeaderMenu = dynamic(() => import('@/components/chat/ChatHeaderMenu'), { ssr: false });
+const ChatSessionsSidebar = dynamic(() => import('@/components/chat/ChatSessionsSidebar'), { ssr: false });
 
 type TabType = 'all' | 'direct' | 'groups' | 'ai';
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '👏'];

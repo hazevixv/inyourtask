@@ -22,8 +22,6 @@
   gap: 24px;
   padding: 20px 24px;
   background: linear-gradient(135deg, rgba(74,123,165,0.12), rgba(74,123,165,0.08));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(74,123,165,0.18);
   border-radius: var(--r4);
   box-shadow: var(--sh-sm);
@@ -63,11 +61,10 @@
 .calendarFilterGroup {
   display: inline-flex;
   gap: 2px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: var(--r2);
   padding: 2px;
-  backdrop-filter: blur(8px);
 }
 
 .calendarFilterBtn {
@@ -105,7 +102,7 @@
   padding: 0 16px;
   border-radius: var(--r2);
   border: 1px solid rgba(74,123,165,0.25);
-  background: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.96);
   color: var(--brand);
   font-size: 0.875rem;
   font-weight: 700;
@@ -115,7 +112,6 @@
   align-items: center;
   gap: 6px;
   transition: all 140ms;
-  backdrop-filter: blur(8px);
 }
 .quickBtn:hover { background: rgba(255,255,255,0.95); box-shadow: var(--sh-sm); opacity: 1; }
 .quickBtnActive {
@@ -138,8 +134,6 @@
 
 .statCard {
   background: var(--glass);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
   border: 1px solid var(--glass-border);
   border-radius: var(--r3);
   padding: 14px 16px;
@@ -224,8 +218,6 @@
 /* Panel */
 .panel {
   background: var(--glass);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
   border: 1px solid var(--glass-border);
   border-radius: var(--r3);
   padding: 16px;

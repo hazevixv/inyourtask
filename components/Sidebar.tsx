@@ -126,6 +126,19 @@ export default function AppShell({
   useEffect(() => { close(); }, [pathname, close]);
 
   useEffect(() => {
+    const routes = ['/', '/projects', '/tasks', '/chat', '/tracking', '/profile', '/brain'];
+    if (isSuperAdmin) {
+      routes.push('/super-admin/dashboard', '/super-admin/ai-workers');
+    }
+
+    routes.forEach((route) => {
+      try {
+        router.prefetch(route);
+      } catch {}
+    });
+  }, [isSuperAdmin, router]);
+
+  useEffect(() => {
     if (!open || !gearRef.current || !menuRef.current) return;
     const rect = gearRef.current.getBoundingClientRect();
     const menu = menuRef.current;

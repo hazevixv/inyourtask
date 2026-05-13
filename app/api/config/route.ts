@@ -5,6 +5,9 @@ import { requireUser } from '@/lib/api-auth';
 import { hasWorkspaceAdminAccess, isPlatformSuperAdminUser } from '@/lib/workspace-permissions';
 import { getRequestWorkspaceContext, buildWorkspaceEntityScope } from '@/lib/workspace-context';
 
+const configCache: Record<string, { ts: number; data: any }> = {};
+const CONFIG_CACHE_TTL = 30_000;
+
 function buildSafeConfigFallback(user: any, workspaceName?: string | null) {
   const scopeLabel = workspaceName || 'Workspace';
   return {
@@ -63,11 +66,25 @@ export async function GET(request: NextRequest) {
     // Check if nocache parameter is set
     const { searchParams } = new URL(request.url);
     const noCache = searchParams.get('nocache') === '1';
+    const activeWorkspaceId = workspaceContext.activeWorkspace?.workspace_id || 'none';
+    const cacheKey = `${user.username}:${activeWorkspaceId}:config`;
+
+    if (!noCache) {
+      const cached = configCache[cacheKey];
+      if (cached && Date.now() - cached.ts < CONFIG_CACHE_TTL) {
+        return NextResponse.json({
+          success: true,
+          data: cached.data
+        }, {
+          headers: {
+            'Cache-Control': 'private, max-age=15, stale-while-revalidate=45'
+          }
+        });
+      }
+    }
 
     // For non-admin users, filter team members by their organizational assignments
     const username = isPlatformSuperAdminUser(user as any) ? undefined : user.username;
-    
-    console.log(`[CONFIG API] Loading config for user: ${user.username}, role: ${user.role}, filtering by username: ${username || 'NO (super admin)'}, nocache: ${noCache}`);
 
     const [configsRaw, defaultsRaw, projectRows] = await Promise.all([
       BrainModel.getAllConfigs(username).catch(err => {
@@ -91,11 +108,11 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    const activeWorkspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
+    const scopedWorkspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
     let configs: any = configsRaw || {};
     let defaults: any = defaultsRaw || {};
 
-    if (activeWorkspaceId) {
+    if (scopedWorkspaceId) {
         const workspaceTeam = await query<any[]>(`
         SELECT
           wm.username AS value,
@@ -130,7 +147,7 @@ export async function GET(request: NextRequest) {
         JOIN users u ON u.username = wm.username
         WHERE wm.workspace_id = ? AND u.is_active = 1
         ORDER BY wm.is_primary DESC, u.full_name ASC, wm.username ASC
-      `, [activeWorkspaceId, workspaceContext.activeWorkspace?.name || 'Workspace', activeWorkspaceId, activeWorkspaceId]);
+      `, [scopedWorkspaceId, workspaceContext.activeWorkspace?.name || 'Workspace', scopedWorkspaceId, scopedWorkspaceId]);
 
       configs.team = workspaceTeam.length > 0 ? workspaceTeam : [{
         value: user.username,
@@ -163,22 +180,24 @@ export async function GET(request: NextRequest) {
       default_category: defaults.default_category || 'Development'
     };
 
-    console.log(`[CONFIG API] Team members loaded: ${configs.team?.length || 0} members`);
-    if (configs.team && configs.team.length > 0) {
-      console.log(`[CONFIG API] Team members:`, configs.team.map((t: any) => t.value || t).join(', '));
-    }
+    const responseData = {
+      ...configs,
+      projects: projectRows.map(p => p.project_id),
+      projectOptions: projectRows,
+      defaults
+    };
+
+    configCache[cacheKey] = {
+      ts: Date.now(),
+      data: responseData
+    };
 
     return NextResponse.json({
       success: true,
-      data: {
-        ...configs,
-        projects: projectRows.map(p => p.project_id),
-        projectOptions: projectRows,
-        defaults
-      }
+      data: responseData
     }, {
       headers: { 
-        'Cache-Control': noCache ? 'no-store, no-cache, must-revalidate' : 'no-store',
+        'Cache-Control': noCache ? 'no-store, no-cache, must-revalidate' : 'private, max-age=15, stale-while-revalidate=45',
         'Pragma': noCache ? 'no-cache' : 'no-cache',
         'Expires': '0'
       }

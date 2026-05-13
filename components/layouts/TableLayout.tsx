@@ -73,14 +73,6 @@ export default function TableLayout({
   onEdit,
   onDelete,
 }: TableLayoutProps) {
-  // Debug logging
-  console.log('[TableLayout] Rendering:', {
-    type,
-    dataLength: data?.length || 0,
-    visibleColumns,
-    data: data?.slice(0, 2) // Log first 2 items
-  });
-
   /**
    * Filter columns based on visibleColumns prop
    * Requirements: 5.5, 5.9
@@ -102,8 +94,6 @@ export default function TableLayout({
       availableColumns.includes(col as any)
     );
   }, [type, visibleColumns]);
-
-  console.log('[TableLayout] Filtered columns:', filteredColumns);
 
   /**
    * Render the DataTable component with filtered columns

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Briefcase, Building2, Phone, FileText, Camera, Save, X, Loader2, Shield } from 'lucide-react';
+import { User, Mail, Briefcase, Building2, Phone, FileText, Camera, Save, X, Loader2, Shield, BadgeInfo, Sparkles } from 'lucide-react';
 import AppShell from '@/components/Sidebar';
 import BottomNav from '@/components/BottomNav';
 import MobileHeader from '@/components/MobileHeader';
@@ -16,7 +16,7 @@ import styles from './profile.module.css';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, authChecked, toast, handleLogout, showToast, activeWorkspace } = useApp();
+  const { user, authChecked, toast, handleLogout, showToast, activeWorkspace, loadData, loadConfig, setActiveWorkspace } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,15 +50,16 @@ export default function ProfilePage() {
       const data = await res.json();
       
       if (data.success) {
-        setProfile(data.profile);
+        const nextProfile = data.profile;
+        setProfile(nextProfile);
         setFormData({
-          full_name: data.profile.full_name || '',
-          email: data.profile.email || '',
-          job_position: data.profile.job_position || user?.job_position || '',
-          organization: data.profile.organization || activeWorkspace?.name || '',
-          bio: data.profile.bio || '',
-          phone: data.profile.phone || '',
-          avatar: data.profile.avatar || ''
+          full_name: nextProfile.full_name || '',
+          email: nextProfile.email || '',
+          job_position: nextProfile.job_position || user?.job_position || '',
+          organization: nextProfile.organization || activeWorkspace?.name || '',
+          bio: nextProfile.bio || '',
+          phone: nextProfile.phone || '',
+          avatar: nextProfile.avatar || ''
         });
         setWorkspaceData({
           workspace_id: activeWorkspace?.workspace_id || '',
@@ -108,10 +109,17 @@ export default function ProfilePage() {
 
       if (data.success) {
         setProfile(data.profile);
+        setFormData({
+          full_name: data.profile.full_name || '',
+          email: data.profile.email || '',
+          job_position: data.profile.job_position || '',
+          organization: data.profile.organization || '',
+          bio: data.profile.bio || '',
+          phone: data.profile.phone || '',
+          avatar: data.profile.avatar || ''
+        });
         showToast('Profile updated successfully', 'success');
-        
-        // Reload page to update user context
-        setTimeout(() => window.location.reload(), 1000);
+        await Promise.allSettled([loadProfile(), loadConfig()]);
       } else {
         showToast(data.error || 'Failed to update profile', 'error');
       }
@@ -161,8 +169,17 @@ export default function ProfilePage() {
 
       const data = await res.json();
       if (data.success) {
+        setWorkspaceData({
+          workspace_id: data.activeWorkspace?.workspace_id || workspaceData.workspace_id,
+          name: data.activeWorkspace?.name || workspaceData.name,
+          description: data.activeWorkspace?.description || workspaceData.description
+        });
+        await Promise.allSettled([
+          setActiveWorkspace(workspaceData.workspace_id),
+          loadData(),
+          loadConfig()
+        ]);
         showToast('Workspace updated successfully', 'success');
-        setTimeout(() => window.location.reload(), 800);
       } else {
         showToast(data.error || 'Failed to update workspace', 'error');
       }
@@ -194,8 +211,12 @@ export default function ProfilePage() {
 
       const data = await res.json();
       if (data.success) {
+        if (data.activeWorkspace?.workspace_id) {
+          await setActiveWorkspace(data.activeWorkspace.workspace_id);
+        }
+        await Promise.allSettled([loadData(), loadConfig()]);
         showToast('Workspace archived successfully', 'success');
-        setTimeout(() => window.location.reload(), 800);
+        router.push('/');
       } else {
         showToast(data.error || 'Failed to archive workspace', 'error');
       }
@@ -299,8 +320,12 @@ export default function ProfilePage() {
                       }}
                     />                  </div>
                   <div className={styles.headerInfo}>
+                    <div className={styles.headerEyebrow}>
+                      <Sparkles size={14} />
+                      Profile Center
+                    </div>
                     <h1>{displayName}</h1>
-                    <p className={styles.username}>@{profile?.username}</p>
+                    <p className={styles.username}>@{profile?.username || user?.username}</p>
                     <div className={styles.metaRow}>
                       <span className={styles.metaChip}>{workspaceName}</span>
                       <span className={styles.metaChipMuted}>{workspaceRole}</span>
@@ -309,6 +334,9 @@ export default function ProfilePage() {
                     {profile?.employee_id && (
                       <p className={styles.employeeId}>ID: {profile.employee_id}</p>
                     )}
+                    <p className={styles.headerSummary}>
+                      Rapikan identitas personal, info kerja, dan detail workspace aktif dari satu tempat tanpa reload penuh.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -316,7 +344,12 @@ export default function ProfilePage() {
               {/* Profile Form */}
               <div className={styles.form}>
                 <div className={styles.section}>
-                  <h2>Personal Information</h2>
+                  <div className={styles.sectionHeader}>
+                    <div>
+                      <h2>Personal Information</h2>
+                      <p className={styles.sectionHint}>Informasi ini dipakai untuk nama tampilan, notifikasi, dan profil chat.</p>
+                    </div>
+                  </div>
                   
                   <div className={styles.field}>
                     <label>
@@ -362,7 +395,12 @@ export default function ProfilePage() {
                 </div>
 
                 <div className={styles.section}>
-                  <h2>Work Information</h2>
+                  <div className={styles.sectionHeader}>
+                    <div>
+                      <h2>Work Information</h2>
+                      <p className={styles.sectionHint}>Bantu tim mengenali peran Anda di workspace dengan jelas.</p>
+                    </div>
+                  </div>
                   
                   <div className={styles.field}>
                     <label>
@@ -407,8 +445,16 @@ export default function ProfilePage() {
                 </div>
 
                 <div className={styles.section}>
-                  <h2>Workspace Information</h2>
-                  <p className={styles.sectionHint}>Manage the workspace you are currently using.</p>
+                  <div className={styles.sectionHeader}>
+                    <div>
+                      <h2>Workspace Information</h2>
+                      <p className={styles.sectionHint}>Kelola workspace yang sedang aktif tanpa keluar dari halaman ini.</p>
+                    </div>
+                    <div className={styles.roleBadge}>
+                      <BadgeInfo size={14} />
+                      {canEditWorkspace ? 'Workspace admin access' : 'View only'}
+                    </div>
+                  </div>
 
                   <div className={styles.field}>
                     <label>
@@ -504,8 +550,13 @@ export default function ProfilePage() {
 
                 {/* Action Buttons */}
                 <div className={styles.actions}>
+                  <div className={styles.actionsCopy}>
+                    <strong>Profile changes</strong>
+                    <span>Simpan perubahan profil tanpa refresh seluruh aplikasi.</span>
+                  </div>
                   <button 
                     className={styles.btnCancel} 
+                    type="button"
                     onClick={handleCancel}
                     disabled={saving}
                   >
@@ -514,6 +565,7 @@ export default function ProfilePage() {
                   </button>
                   <button 
                     className={styles.btnSave} 
+                    type="button"
                     onClick={handleSave}
                     disabled={saving}
                   >

@@ -22,7 +22,7 @@ export default function PageLoader() {
             onClick={() => window.location.reload()}
             style={{
               padding: '8px 20px',
-              background: 'linear-gradient(135deg,#7c3aed,#6d28d9)',
+              background: 'linear-gradient(135deg, #5f88b4 0%, #6aa1bf 52%, #76b6b0 100%)',
               color: 'white',
               border: 'none',
               borderRadius: 8,
