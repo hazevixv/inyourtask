@@ -1027,7 +1027,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
             {/* Avatar — pakai foto user, badge bot di pojok */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg,#3d6ba3,#a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.5rem', fontWeight: 700, fontFamily: 'DM Sans, sans-serif', boxShadow: '0 4px 16px rgba(61,107,163,0.25)' }}>
+              <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg,#4a7ba5,#85b8e0)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.5rem', fontWeight: 700, fontFamily: 'DM Sans, sans-serif', boxShadow: '0 4px 16px rgba(74,123,165,0.25)' }}>
                 {/* Priority: user avatar > agent avatar > initials */}
                 {user?.avatar ? (
                   <img src={getAvatarUrl(user.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => {
@@ -1041,7 +1041,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                 )}
               </div>
               {/* Bot badge — purple untuk personal AI */}
-              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 24, height: 24, borderRadius: '50%', background: 'linear-gradient(135deg,#3d6ba3,#a78bfa)', border: '2.5px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(61,107,163,0.3)' }}>
+              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 24, height: 24, borderRadius: '50%', background: 'linear-gradient(135deg,#4a7ba5,#85b8e0)', border: '2.5px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(74,123,165,0.3)' }}>
                 <Bot size={12} color="white" strokeWidth={2.5} />
               </div>
             </div>

@@ -44,7 +44,7 @@
   }
 
   .item:hover {
-    color: #3d6ba3; /* Raymaizing purple */
+    color: #4a7ba5; /* Raymaizing purple */
     background: rgba(124, 58, 237, 0.08);
   }
 
@@ -58,7 +58,7 @@
   }
 
   .active {
-    color: #3d6ba3; /* Raymaizing purple */
+    color: #4a7ba5; /* Raymaizing purple */
     background: linear-gradient(180deg, rgba(124, 58, 237, 0.16), rgba(124, 58, 237, 0.08));
   }
 
@@ -71,7 +71,7 @@
     width: 20px;
     height: 3px;
     border-radius: 999px;
-    background: #3d6ba3; /* Raymaizing purple */
+    background: #4a7ba5; /* Raymaizing purple */
   }
 
   .item svg {

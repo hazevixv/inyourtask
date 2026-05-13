@@ -15,7 +15,7 @@
   min-width: 0;
 }
 
-/* ── Sidebar Trigger (gear icon inside user card) ── */
+/* â”€â”€ Sidebar Trigger (gear icon inside user card) â”€â”€ */
 
 .triggerSidebar {
   display: flex;
@@ -36,9 +36,9 @@
 
 .triggerSidebar:hover {
   background: #f8fafc;
-  border-color: rgba(61,107,163,0.3);
+  border-color: rgba(74,123,165,0.3);
   color: var(--brand);
-  box-shadow: 0 2px 8px rgba(61,107,163,0.12);
+  box-shadow: 0 2px 8px rgba(74,123,165,0.12);
 }
 
 .triggerSidebar:active {
@@ -46,12 +46,12 @@
 }
 
 .triggerSidebar.triggerActive {
-  border-color: rgba(61,107,163,0.35);
+  border-color: rgba(74,123,165,0.35);
   color: var(--brand);
-  background: rgba(61,107,163,0.06);
+  background: rgba(74,123,165,0.06);
 }
 
-/* ── Bottom Nav Trigger ── */
+/* â”€â”€ Bottom Nav Trigger â”€â”€ */
 
 .triggerBottom {
   flex: 1;
@@ -85,13 +85,13 @@
 }
 
 .triggerBottom:hover {
-  background: rgba(61,107,163,0.08);
-  color: #3d6ba3;
+  background: rgba(74,123,165,0.08);
+  color: #4a7ba5;
 }
 
 .triggerBottom.triggerActive {
-  color: #3d6ba3;
-  background: linear-gradient(180deg, rgba(61,107,163,0.16), rgba(61,107,163,0.08));
+  color: #4a7ba5;
+  background: linear-gradient(180deg, rgba(74,123,165,0.16), rgba(74,123,165,0.08));
 }
 
 .triggerBottom.triggerActive::before {
@@ -103,7 +103,7 @@
   width: 20px;
   height: 3px;
   border-radius: 999px;
-  background: #3d6ba3;
+  background: #4a7ba5;
 }
 
 .triggerIcon {
@@ -128,7 +128,7 @@
   color: inherit;
 }
 
-/* ── Dropdown Menu ── */
+/* â”€â”€ Dropdown Menu â”€â”€ */
 
 .menu {
   position: fixed;
@@ -155,7 +155,7 @@
   transform: translateX(-50%);
 }
 
-/* ── Menu Header ── */
+/* â”€â”€ Menu Header â”€â”€ */
 
 .menuHeader {
   padding: 8px 10px 10px;
@@ -177,7 +177,7 @@
   text-transform: capitalize;
 }
 
-/* ── Menu Groups ── */
+/* â”€â”€ Menu Groups â”€â”€ */
 
 .group {
   display: grid;
@@ -216,12 +216,12 @@
 }
 
 .menuItem:hover {
-  background: rgba(61,107,163,0.08);
+  background: rgba(74,123,165,0.08);
   color: var(--tx1);
 }
 
 .menuItemActive {
-  background: rgba(61,107,163,0.12);
+  background: rgba(74,123,165,0.12);
   color: var(--brand);
 }
 
@@ -244,7 +244,7 @@
   font-weight: 600;
 }
 
-/* ── Logout ── */
+/* â”€â”€ Logout â”€â”€ */
 
 .logoutRow {
   margin-top: 10px;
@@ -274,7 +274,7 @@
   color: var(--red);
 }
 
-/* ── Mobile adjustments ── */
+/* â”€â”€ Mobile adjustments â”€â”€ */
 @media (max-width: 768px) {
   .menu {
     width: min(calc(100vw - 20px), 380px);
