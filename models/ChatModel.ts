@@ -58,6 +58,7 @@ export interface AIAgent extends RowDataPacket {
   current_activations: number;
   owner_username: string | null;
   created_by: string;
+  agent_kind?: 'personal' | 'worker' | 'custom';
   created_at: Date;
   updated_at: Date;
 }
@@ -411,12 +412,59 @@ export class ChatModel {
     return rows[0] || null;
   }
 
+  static getAgentKind(agent: Partial<AIAgent> | null | undefined): 'personal' | 'worker' | 'custom' {
+    if (!agent) return 'worker';
+    const agentId = String(agent.agent_id || '');
+    if (Number(agent.is_personal) === 1 || agentId.startsWith('personal-')) {
+      return 'personal';
+    }
+    if (String(agent.owner_username || '').trim()) {
+      return 'custom';
+    }
+    return 'worker';
+  }
+
+  static async repairLegacyAgentKinds(): Promise<void> {
+    await query(
+      `UPDATE ai_agents
+       SET is_personal = 0,
+           is_public = 0,
+           access_type = COALESCE(NULLIF(access_type, ''), 'free'),
+           updated_at = NOW()
+       WHERE is_personal = 1
+         AND agent_id NOT LIKE 'personal-%'`
+    );
+  }
+
   static async createAgent(data: Partial<AIAgent>, createdBy: string): Promise<AIAgent> {
     const agentId = `agent-${Date.now()}`;
     await query(
-      `INSERT INTO ai_agents (agent_id, workspace_id, name, description, role, system_prompt, knowledge_base, model, is_personal, owner_username, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [agentId, data.workspace_id || null, data.name, data.description, data.role, data.system_prompt, data.knowledge_base, data.model || 'openai/gpt-oss-20b', data.is_personal || 0, data.owner_username, createdBy]
+      `INSERT INTO ai_agents (
+         agent_id, workspace_id, name, description, role, system_prompt, knowledge_base, model,
+         is_personal, access_type, subscription_plan_id, is_public, agent_code,
+         max_activations, current_activations, owner_username, created_by, is_active
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        agentId,
+        data.workspace_id || null,
+        data.name,
+        data.description,
+        data.role,
+        data.system_prompt,
+        data.knowledge_base,
+        data.model || 'openai/gpt-oss-20b',
+        data.is_personal || 0,
+        data.access_type || 'free',
+        data.subscription_plan_id || null,
+        Number(data.is_public) === 1 ? 1 : 0,
+        data.agent_code || null,
+        data.max_activations ?? -1,
+        data.current_activations ?? 0,
+        data.owner_username || null,
+        createdBy,
+        data.is_active ?? 1
+      ]
     );
     const rows = await query<AIAgent[]>('SELECT * FROM ai_agents WHERE agent_id = ?', [agentId]);
     return rows[0];
@@ -555,6 +603,7 @@ export class ChatModel {
       LEFT JOIN user_agent_assignments ua ON ua.agent_id = a.agent_id AND ua.username = ?
       LEFT JOIN subscription_plans sp ON sp.id = a.subscription_plan_id
       WHERE a.is_personal = 0
+        AND (a.owner_username IS NULL OR a.owner_username = '')
         AND a.is_active = 1
         AND (
           a.is_public = 1
@@ -610,7 +659,12 @@ export class ChatModel {
 
   static async getPersonalAICount(username: string, workspaceId?: string | null): Promise<number> {
     const rows = await query<any[]>(
-      `SELECT COUNT(*) AS cnt FROM ai_agents WHERE is_personal = 1 AND owner_username = ? ${workspaceId ? 'AND workspace_id = ?' : ''}`,
+      `SELECT COUNT(*) AS cnt
+       FROM ai_agents
+       WHERE is_personal = 1
+         AND agent_id LIKE 'personal-%'
+         AND owner_username = ?
+         ${workspaceId ? 'AND workspace_id = ?' : ''}`,
       workspaceId ? [username, workspaceId] : [username]
     );
     return rows[0]?.cnt || 0;
@@ -618,12 +672,10 @@ export class ChatModel {
 
   static async canCreatePersonalAI(username: string): Promise<{ allowed: boolean; current: number; max: number; reason?: string }> {
     const current = await ChatModel.getPersonalAICount(username);
-    const sub = await ChatModel.getUserActiveSubscription(username);
-    const max = sub && sub.max_personal_ai !== -1 ? sub.max_personal_ai : 3; // default 3 for free
+    const max = 1;
 
-    if (max === -1) return { allowed: true, current, max: -1 }; // unlimited
     if (current >= max) {
-      return { allowed: false, current, max, reason: `Kamu sudah mencapai batas maksimal ${max} Personal AI. Berlangganan untuk membuat lebih banyak.` };
+      return { allowed: false, current, max, reason: 'Kamu sudah memiliki Personal AI default. Setiap user hanya memiliki satu Personal AI.' };
     }
     return { allowed: true, current, max };
   }

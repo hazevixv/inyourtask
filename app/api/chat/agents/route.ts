@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getSessionUser(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    await ChatModel.repairLegacyAgentKinds();
     const workspaceContext = await getRequestWorkspaceContext(req);
     const activeWorkspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
     const canManageWorkspace = hasWorkspaceAdminAccess(user as any, workspaceContext.activeWorkspace);
@@ -36,18 +37,36 @@ export async function GET(req: NextRequest) {
        FROM ai_agents a
        LEFT JOIN subscription_plans sp ON sp.id = a.subscription_plan_id
        WHERE a.is_personal = 0
+         AND (a.owner_username IS NULL OR a.owner_username = '')
          AND a.is_active = 1
          AND a.is_public = 1
        ORDER BY a.name ASC`,
       []
     );
 
-    // Get personal agents
+    // Get the current user's single personal assistant only
     const personalAgents = await query<any[]>(
       `SELECT a.*, u.avatar as owner_avatar, u.full_name as owner_full_name
        FROM ai_agents a
        LEFT JOIN users u ON u.username = a.owner_username
        WHERE a.is_personal = 1
+         AND a.agent_id LIKE 'personal-%'
+         AND a.owner_username = ?
+         ${forSettings ? '' : 'AND a.is_active = 1'}
+       ORDER BY a.updated_at DESC, a.name ASC
+       LIMIT 1`,
+      [user.username]
+    );
+
+    // Custom user-created agents (not personal, not super-admin workers)
+    const customAgents = await query<any[]>(
+      `SELECT a.*, u.avatar as owner_avatar, u.full_name as owner_full_name
+       FROM ai_agents a
+       LEFT JOIN users u ON u.username = a.owner_username
+       WHERE a.is_personal = 0
+         AND a.agent_id NOT LIKE 'personal-%'
+         AND a.owner_username IS NOT NULL
+         AND a.owner_username <> ''
          AND a.workspace_id ${activeWorkspaceId ? '= ?' : 'IS NULL'}
          ${canManageWorkspace && forSettings ? '' : 'AND a.owner_username = ?'}
          ${forSettings ? '' : 'AND a.is_active = 1'}
@@ -57,7 +76,12 @@ export async function GET(req: NextRequest) {
         : (canManageWorkspace && forSettings ? [] : [user.username])
     );
 
-    const agents = dedupeAgents([...personalAgents, ...workerAgents, ...fallbackWorkerAgents]);
+    const agents = dedupeAgents([
+      ...personalAgents.map((agent) => ({ ...agent, agent_kind: 'personal' })),
+      ...customAgents.map((agent) => ({ ...agent, agent_kind: 'custom' })),
+      ...workerAgents.map((agent) => ({ ...agent, agent_kind: 'worker' })),
+      ...fallbackWorkerAgents.map((agent) => ({ ...agent, agent_kind: 'worker' })),
+    ]);
     return NextResponse.json({ success: true, agents });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
@@ -73,10 +97,14 @@ export async function POST(req: NextRequest) {
     if (!data.name || !data.system_prompt) {
       return NextResponse.json({ success: false, error: 'name and system_prompt required' }, { status: 400 });
     }
-    // Regular users can only create Personal AI; only Super Admin creates Worker AI
+    await ChatModel.repairLegacyAgentKinds();
+    // Regular users/admins create workspace-scoped custom AI agents.
+    // Only platform super admin creates worker AI.
     const isSuperAdmin = (await import('@/lib/workspace-permissions')).isPlatformSuperAdminUser(user as any);
     if (!isSuperAdmin) {
-      data.is_personal = 1;
+      data.is_personal = 0;
+      data.is_public = 0;
+      data.access_type = 'free';
       data.owner_username = user.username;
     }
     const agent = await ChatModel.createAgent({ ...data, workspace_id: workspaceContext.activeWorkspace?.workspace_id || null }, user.username);
@@ -94,7 +122,7 @@ export async function POST(req: NextRequest) {
       }
     } catch {}
 
-    return NextResponse.json({ success: true, agent });
+    return NextResponse.json({ success: true, agent: { ...agent, agent_kind: ChatModel.getAgentKind(agent) } });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }

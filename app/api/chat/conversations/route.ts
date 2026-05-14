@@ -88,12 +88,23 @@ export async function POST(req: NextRequest) {
       convId = await ChatModel.createGroupConversation(name, members || [], user.username, workspaceId);
     } else if (type === 'ai_agent' || type === 'ai_personal') {
       if (!agentId) return NextResponse.json({ success: false, error: 'Agent ID required' }, { status: 400 });
-      if (type === 'ai_agent') {
-        const agent = await ChatModel.getAgentById(agentId);
-        if (!agent) {
-          return NextResponse.json({ success: false, error: 'Agent not found' }, { status: 404 });
-        }
+      const agent = await ChatModel.getAgentById(agentId);
+      if (!agent) {
+        return NextResponse.json({ success: false, error: 'Agent not found' }, { status: 404 });
+      }
+      const agentKind = ChatModel.getAgentKind(agent);
 
+      if (agentKind === 'personal') {
+        if (agent.owner_username !== user.username) {
+          return NextResponse.json({ success: false, error: 'Personal AI ini milik user lain' }, { status: 403 });
+        }
+        convId = await ChatModel.createAIAgentConversation(user.username, agentId, true, workspaceId);
+      } else if (agentKind === 'custom') {
+        if (agent.owner_username !== user.username) {
+          return NextResponse.json({ success: false, error: 'User AI Agent ini hanya bisa dibuka oleh pemiliknya' }, { status: 403 });
+        }
+        convId = await ChatModel.createAIAgentConversation(user.username, agentId, false, workspaceId);
+      } else {
         const existing = await query<any[]>(
           'SELECT * FROM user_agent_assignments WHERE agent_id = ? AND username = ?',
           [agentId, user.username]
@@ -123,8 +134,8 @@ export async function POST(req: NextRequest) {
             }, { status: 403 });
           }
         }
+        convId = await ChatModel.createAIAgentConversation(user.username, agentId, false, workspaceId);
       }
-      convId = await ChatModel.createAIAgentConversation(user.username, agentId, type === 'ai_personal', workspaceId);
     } else {
       return NextResponse.json({ success: false, error: 'Invalid type' }, { status: 400 });
     }

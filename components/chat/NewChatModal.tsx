@@ -34,6 +34,13 @@ export default function NewChatModal({ user, agents, onClose, onCreated, showToa
     is_active: Number(agent?.is_active) === 1,
   });
 
+  const getAgentKind = (agent: any): 'personal' | 'worker' | 'custom' => {
+    if (agent?.agent_kind) return agent.agent_kind;
+    if (Number(agent?.is_personal) === 1 || String(agent?.agent_id || '').startsWith('personal-')) return 'personal';
+    if (String(agent?.owner_username || '').trim()) return 'custom';
+    return 'worker';
+  };
+
   useEffect(() => {
     loadContacts();
   }, []);
@@ -119,7 +126,7 @@ export default function NewChatModal({ user, agents, onClose, onCreated, showToa
   const openAgentChat = async (agent: any, activationCode?: string) => {
     setCreating(agent.agent_id);
     try {
-      const convType = Number(agent?.is_personal) === 1 ? 'ai_personal' : 'ai_agent';
+      const convType = getAgentKind(agent) === 'personal' ? 'ai_personal' : 'ai_agent';
       const res = await fetch('/api/user/agents/activate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,6 +170,9 @@ export default function NewChatModal({ user, agents, onClose, onCreated, showToa
     !search || a.name?.toLowerCase().includes(search.toLowerCase()) ||
     a.role?.toLowerCase().includes(search.toLowerCase())
   );
+  const personalAgents = filteredAgents.filter(agent => getAgentKind(agent) === 'personal');
+  const customAgents = filteredAgents.filter(agent => getAgentKind(agent) === 'custom');
+  const workerAgents = filteredAgents.filter(agent => getAgentKind(agent) === 'worker');
 
   const tabMeta = {
     contacts: {
@@ -182,7 +192,7 @@ export default function NewChatModal({ user, agents, onClose, onCreated, showToa
     ai: {
       label: 'AI Agents',
       icon: <Bot size={13} />,
-      hint: 'Open your personal AI or a worker AI from Super Admin.',
+      hint: 'Open your Personal AI, your custom User AI Agent, or a Worker AI from Super Admin.',
       placeholder: 'Search AI agents...',
       count: filteredAgents.length,
     },
@@ -447,79 +457,101 @@ export default function NewChatModal({ user, agents, onClose, onCreated, showToa
                   <div style={{ fontSize: '0.75rem', marginTop: 4 }}>Ask your admin or super-admin to publish more AI workers.</div>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gap: 8 }}>
-                  {filteredAgents.map(agent => {
-                    const isPersonal = !!agent.is_personal;
-                    return (
-                      <button
-                        key={agent.agent_id}
-                        onClick={() => openAgentChat(agent)}
-                        disabled={creating === agent.agent_id}
-                        style={{
-                          ...cardStyle,
-                          opacity: creating === agent.agent_id ? 0.6 : 1
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = isPersonal ? '#FAF5FF' : '#F0FDF4';
-                          e.currentTarget.style.borderColor = isPersonal ? '#e9d5ff' : '#bbf7d0';
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = 'white';
-                          e.currentTarget.style.borderColor = 'rgba(226,232,240,0.8)';
-                        }}
-                      >
-                        <div style={{
-                          width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-                          background: isPersonal
-                            ? 'linear-gradient(135deg,#7c3aed,#a78bfa)'
-                            : 'linear-gradient(135deg,#10b981,#059669)',
-                          overflow: 'hidden', display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', color: 'white'
-                        }}>
-                          {agent.avatar ? (
-                            <img
-                              src={getAvatarUrl(agent.avatar)}
-                              alt={agent.name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                          ) : <Bot size={18} />}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827', fontFamily: 'DM Sans, sans-serif' }}>
-                              {agent.name}
-                            </span>
-                            <span style={{
-                              fontSize: '0.65rem', padding: '1px 6px',
-                              background: isPersonal ? 'rgba(124,58,237,0.1)' : 'rgba(16,185,129,0.1)',
-                              color: isPersonal ? '#7c3aed' : '#059669',
-                              borderRadius: 999, fontWeight: 700, fontFamily: 'DM Sans, sans-serif'
-                            }}>
-                              {isPersonal ? 'Personal' : 'Worker'}
-                            </span>
-                            {!isPersonal && agent.access_type && (
-                              <span style={{
-                                fontSize: '0.65rem', padding: '1px 6px',
-                                background: agent.access_type === 'subscription' ? 'rgba(245,158,11,0.12)' : agent.access_type === 'code' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
-                                color: agent.access_type === 'subscription' ? '#d97706' : agent.access_type === 'code' ? '#6366f1' : '#059669',
-                                borderRadius: 999, fontWeight: 700, fontFamily: 'DM Sans, sans-serif'
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {[
+                    { title: 'Personal AI', color: '#7c3aed', subtitle: 'Asisten default pribadi kamu', items: personalAgents },
+                    { title: 'User AI Agent', color: '#2563eb', subtitle: 'AI custom buatanmu sendiri', items: customAgents },
+                    { title: 'Worker AI', color: '#059669', subtitle: 'AI pemberian dari Super Admin', items: workerAgents },
+                  ].filter(section => section.items.length > 0).map(section => (
+                    <div key={section.title}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 800, color: section.color, margin: '0 0 8px 4px' }}>
+                        {section.title}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#94a3b8', margin: '0 0 8px 4px' }}>{section.subtitle}</div>
+                      <div style={{ display: 'grid', gap: 8 }}>
+                        {section.items.map(agent => {
+                          const agentKind = getAgentKind(agent);
+                          const isPersonal = agentKind === 'personal';
+                          const isCustom = agentKind === 'custom';
+                          const accentColor = isPersonal ? '#7c3aed' : isCustom ? '#2563eb' : '#059669';
+                          const tintColor = isPersonal ? '#FAF5FF' : isCustom ? '#EFF6FF' : '#F0FDF4';
+                          const borderColor = isPersonal ? '#e9d5ff' : isCustom ? '#bfdbfe' : '#bbf7d0';
+                          const badgeBg = isPersonal ? 'rgba(124,58,237,0.1)' : isCustom ? 'rgba(37,99,235,0.1)' : 'rgba(16,185,129,0.1)';
+                          return (
+                            <button
+                              key={agent.agent_id}
+                              onClick={() => openAgentChat(agent)}
+                              disabled={creating === agent.agent_id}
+                              style={{
+                                ...cardStyle,
+                                opacity: creating === agent.agent_id ? 0.6 : 1
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = tintColor;
+                                e.currentTarget.style.borderColor = borderColor;
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = 'white';
+                                e.currentTarget.style.borderColor = 'rgba(226,232,240,0.8)';
+                              }}
+                            >
+                              <div style={{
+                                width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+                                background: isPersonal
+                                  ? 'linear-gradient(135deg,#7c3aed,#a78bfa)'
+                                  : isCustom
+                                    ? 'linear-gradient(135deg,#2563eb,#60a5fa)'
+                                    : 'linear-gradient(135deg,#10b981,#059669)',
+                                overflow: 'hidden', display: 'flex', alignItems: 'center',
+                                justifyContent: 'center', color: 'white'
                               }}>
-                                {agent.access_type === 'subscription' ? 'Subscription' : agent.access_type === 'code' ? 'Code' : 'Free'}
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#6B7280', fontFamily: 'DM Sans, sans-serif', marginBottom: 2 }}>
-                            {agent.role || 'AI Assistant'}
-                          </div>
-                          <div style={{ fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'DM Sans, sans-serif' }}>
-                            {isPersonal ? 'Open your exclusive assistant' : 'Open a worker AI and continue the conversation'}
-                          </div>
-                        </div>
-                        <ChevronRight size={14} style={{ color: '#D1D5DB', flexShrink: 0 }} />
-                      </button>
-                    );
-                  })}
+                                {agent.avatar ? (
+                                  <img
+                                    src={getAvatarUrl(agent.avatar)}
+                                    alt={agent.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                  />
+                                ) : <Bot size={18} />}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+                                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827', fontFamily: 'DM Sans, sans-serif' }}>
+                                    {agent.name}
+                                  </span>
+                                  <span style={{
+                                    fontSize: '0.65rem', padding: '1px 6px',
+                                    background: badgeBg,
+                                    color: accentColor,
+                                    borderRadius: 999, fontWeight: 700, fontFamily: 'DM Sans, sans-serif'
+                                  }}>
+                                    {isPersonal ? 'Personal' : isCustom ? 'Custom' : 'Worker'}
+                                  </span>
+                                  {!isPersonal && !isCustom && agent.access_type && (
+                                    <span style={{
+                                      fontSize: '0.65rem', padding: '1px 6px',
+                                      background: agent.access_type === 'subscription' ? 'rgba(245,158,11,0.12)' : agent.access_type === 'code' ? 'rgba(99,102,241,0.12)' : 'rgba(16,185,129,0.12)',
+                                      color: agent.access_type === 'subscription' ? '#d97706' : agent.access_type === 'code' ? '#6366f1' : '#059669',
+                                      borderRadius: 999, fontWeight: 700, fontFamily: 'DM Sans, sans-serif'
+                                    }}>
+                                      {agent.access_type === 'subscription' ? 'Subscription' : agent.access_type === 'code' ? 'Code' : 'Free'}
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#6B7280', fontFamily: 'DM Sans, sans-serif', marginBottom: 2 }}>
+                                  {agent.role || (isPersonal ? 'Personal Assistant' : isCustom ? 'Custom AI Agent' : 'AI Worker')}
+                                </div>
+                                <div style={{ fontSize: '0.72rem', color: '#9CA3AF', fontFamily: 'DM Sans, sans-serif' }}>
+                                  {isPersonal ? 'Open your exclusive assistant' : isCustom ? 'Open your custom AI agent' : 'Open a worker AI and continue the conversation'}
+                                </div>
+                              </div>
+                              <ChevronRight size={14} style={{ color: '#D1D5DB', flexShrink: 0 }} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

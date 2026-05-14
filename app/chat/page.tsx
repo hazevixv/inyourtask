@@ -172,7 +172,7 @@ export default function ChatPage() {
 
   const loadAgents = useCallback(async () => {
     try {
-      const r = await fetch('/api/chat/agents?settings=1');
+      const r = await fetch('/api/chat/agents');
       const d = await r.json();
       if (d.success) setAgents((d.agents || []).map(normalizeAgent));
     } catch {}
@@ -184,15 +184,23 @@ export default function ChatPage() {
       const d = await r.json();
       if (d.success) {
         setMessages(d.messages);
-        const rMap: Record<string, any[]> = {};
-        for (const msg of d.messages) {
-          if (msg.reaction_count > 0) {
+        const reactionTargets = d.messages.filter((msg: any) => msg.reaction_count > 0);
+        const reactionEntries = await Promise.all(
+          reactionTargets.map(async (msg: any) => {
             try {
               const rr = await fetch(`/api/chat/reactions?msgId=${msg.msg_id}`);
               const rd = await rr.json();
-              if (rd.success && rd.reactions.length > 0) rMap[msg.msg_id] = rd.reactions;
-            } catch {}
-          }
+              return rd.success && rd.reactions.length > 0 ? [msg.msg_id, rd.reactions] : null;
+            } catch {
+              return null;
+            }
+          })
+        );
+        const rMap: Record<string, any[]> = {};
+        for (const entry of reactionEntries) {
+          if (!entry) continue;
+          const [msgId, list] = entry;
+          rMap[msgId] = list;
         }
         setReactions(rMap);
       }
@@ -218,7 +226,7 @@ export default function ChatPage() {
           const preferred = d.conversations.find((c: any) => c.type === 'ai_personal')
             || d.conversations.find((c: any) => c.type === 'ai_agent')
             || d.conversations[0];
-          await loadAgents();
+          void loadAgents();
           if (preferred && !isMobileNow) {
             setActiveConv(preferred);
             setMessages([]);
@@ -254,7 +262,7 @@ export default function ChatPage() {
         } else await loadConversations();
       } catch { await loadConversations(); }
       if (!loadedFromInit) {
-        await loadAgents();
+        void loadAgents();
       }
       setLoading(false);
     };
@@ -660,8 +668,9 @@ export default function ChatPage() {
   });
 
   const aiAgents = agents.filter(a => Number(a.is_active) === 1 && !a.is_deleted);
-  const personalAIs = aiAgents.filter(a => Number(a.is_personal) === 1);
-  const workerAIs = aiAgents.filter(a => Number(a.is_personal) === 0);
+  const personalAIs = aiAgents.filter(a => a.agent_kind === 'personal' || (Number(a.is_personal) === 1 && String(a.agent_id || '').startsWith('personal-')));
+  const customAIs = aiAgents.filter(a => a.agent_kind === 'custom' || (Number(a.is_personal) === 0 && String(a.owner_username || '').trim()));
+  const workerAIs = aiAgents.filter(a => a.agent_kind === 'worker' || (Number(a.is_personal) === 0 && !String(a.owner_username || '').trim()));
   const hasConversationForAgent = (agentId: string) => conversations.some(c => c.agent_id === agentId && (c.type === 'ai_agent' || c.type === 'ai_personal'));
 
   const filteredMessages = msgSearch ? messages.filter(m => m.content?.toLowerCase().includes(msgSearch.toLowerCase())) : messages;
@@ -781,6 +790,24 @@ export default function ChatPage() {
                     </div>
                   )}
 
+                  {customAIs.length > 0 && (
+                    <div style={{ width: '100%', marginBottom: 8 }}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#2563eb', margin: '0 0 8px 4px' }}>User AI Agent</div>
+                      {customAIs.map(agent => (
+                        <div key={agent.agent_id} className={styles.agentItem} onClick={() => openAgentChat(agent)}>
+                          <ConvAvatar src={agent.avatar} name={agent.name} size={34} type="ai_agent" />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div className={styles.agentName}>
+                              {agent.name}
+                              {hasConversationForAgent(agent.agent_id) && <span style={{ marginLeft: 6, fontSize: '0.62rem', fontWeight: 700, padding: '1px 6px', background: 'rgba(16,185,129,0.12)', color: '#059669', borderRadius: 999 }}>Open</span>}
+                            </div>
+                            <div className={styles.agentRole}>{agent.role || 'Custom AI Agent'}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {workerAIs.length > 0 && (
                     <div style={{ width: '100%' }}>
                       <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10b981', margin: '0 0 8px 4px' }}>Worker AI</div>
@@ -804,7 +831,7 @@ export default function ChatPage() {
                     </div>
                   )}
 
-                  {personalAIs.length === 0 && workerAIs.length === 0 && (
+                  {personalAIs.length === 0 && customAIs.length === 0 && workerAIs.length === 0 && (
                     <div style={{ padding: '12px 8px', color: '#9CA3AF', fontSize: '0.85rem' }}>
                       No AI agents available
                     </div>

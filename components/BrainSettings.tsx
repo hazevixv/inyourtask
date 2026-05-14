@@ -138,16 +138,13 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
       const data = await res.json();
       if (data.success) {
         const allAgents = (data.agents || []).map(normalizeAgent);
-        // Worker agents: non-personal agents from Super Admin
-        setWorkerAgents(allAgents.filter((a: any) => !a.is_personal && a.is_active));
-        // Personal agents for management
+        setWorkerAgents(allAgents.filter((a: any) => a.agent_kind === 'worker' && a.is_active));
         setAgents(
           canManagePersonalAgents
-            ? allAgents.filter((a: any) => a.is_personal && a.is_active) // admin sees all personal AI
-            : allAgents.filter((a: any) => a.is_personal && a.is_active && a.owner_username === user?.username) // user sees their own
+            ? allAgents.filter((a: any) => a.agent_kind === 'custom' && a.is_active)
+            : allAgents.filter((a: any) => a.agent_kind === 'custom' && a.is_active && a.owner_username === user?.username)
         );
-        // Personal AI assistant (first one)
-        const myPersonal = allAgents.find((a: any) => a.is_personal && a.owner_username === user?.username);
+        const myPersonal = allAgents.find((a: any) => a.agent_kind === 'personal' && a.owner_username === user?.username);
         setPersonalAgent(myPersonal || null);
       }
     } catch {}
@@ -984,7 +981,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', fontFamily: 'DM Sans, sans-serif' }}>AI Agents</div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'DM Sans, sans-serif' }}>Personal AI (buat sendiri) &bull; Worker AI (dari Super Admin) â€” semua di sini</div>
+          <div style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'DM Sans, sans-serif' }}>Personal AI default kamu &bull; User AI Agent custom buatan user &bull; Worker AI dari Super Admin</div>
         </div>
         <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={openNewAgent} style={{ whiteSpace: 'nowrap' }}>
           <Plus size={14} /> New Agent
@@ -1187,12 +1184,12 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
             <div>
               <h3>
                 <Bot size={18} />
-                Semua AI Agent
+                User AI Agent
               </h3>
               <p>
                 {canManagePersonalAgents
-                  ? 'Semua Personal AI buatan user di workspace'
-                  : 'AI Agent buatanmu â€” kelola dan sesuaikan'}
+                  ? 'Semua User AI Agent custom di workspace'
+                  : 'User AI Agent custom buatanmu â€” kelola dan sesuaikan'}
               </p>
             </div>
             <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={openNewAgent}>
@@ -1213,7 +1210,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
           <div className={styles.agentGrid}>
             {agents.map(agent => {
               const canEdit = canManagePersonalAgents || agent.created_by === user?.username || agent.owner_username === user?.username;
-              const isWorkerReadOnly = !agent.is_personal && !canManageWorkerAgents;
+              const isWorkerReadOnly = agent.agent_kind === 'worker' && !canManageWorkerAgents;
               return (
               <div key={agent.agent_id} className={`${styles.agentCard} ${!agent.is_active ? styles.agentInactive : ''}`}>
                 <div className={styles.agentCardHeader}>
@@ -1227,7 +1224,13 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                   <div className={styles.agentInfo}>
                     <div className={styles.agentName}>{agent.name}</div>
                     <div className={styles.agentRole}>{agent.role || 'AI Agent'}</div>
-                    {agent.is_personal ? <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(139,92,246,0.1)', color: '#4a7ba5', borderRadius: 4, fontWeight: 600 }}>Personal</span> : <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(16,185,129,0.1)', color: '#059669', borderRadius: 4, fontWeight: 600 }}>Worker</span>}
+                    {agent.agent_kind === 'custom' ? (
+                      <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(59,130,246,0.1)', color: '#2563eb', borderRadius: 4, fontWeight: 600 }}>Custom</span>
+                    ) : agent.agent_kind === 'personal' ? (
+                      <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(139,92,246,0.1)', color: '#4a7ba5', borderRadius: 4, fontWeight: 600 }}>Personal</span>
+                    ) : (
+                      <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(16,185,129,0.1)', color: '#059669', borderRadius: 4, fontWeight: 600 }}>Worker</span>
+                    )}
                   </div>
                   <div className={styles.agentStatus} style={{ background: agent.is_active ? 'var(--green-bg)' : 'var(--red-bg)', color: agent.is_active ? 'var(--green)' : 'var(--red)' }}>
                     {agent.is_active ? 'Active' : 'Inactive'}
@@ -1258,7 +1261,7 @@ export default function BrainSettings({ config, onUpdate, showToast, user }: Bra
                       <button className={`${styles.btn}`} onClick={() => toggleAgent(agent)}>
                         {agent.is_active ? 'Deactivate' : 'Activate'}
                       </button>
-                      {canManageWorkerAgents && !agent.is_personal && (
+                      {canManageWorkerAgents && agent.agent_kind === 'worker' && (
                         <button className={`${styles.btn}`} onClick={() => openRoleAssign(agent)} title="Assign to job roles"
                           style={{ background: 'rgba(16,185,129,0.08)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}>
                           ðŸ‘¥ Roles

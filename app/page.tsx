@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import AppShell from '@/components/Sidebar';
-import Overview from '@/components/Overview';
-import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
 import PageLoader from '@/components/PageLoader';
 import BottomNav from '@/components/BottomNav';
@@ -13,6 +12,15 @@ import { useApp } from '@/lib/AppContext';
 import { Plus } from 'lucide-react';
 import styles from '@/components/Sidebar.module.css';
 import { useRouter } from 'next/navigation';
+
+const Overview = dynamic(() => import('@/components/Overview'), {
+  ssr: false,
+  loading: () => <PageLoader />
+});
+
+const Modal = dynamic(() => import('@/components/Modal'), {
+  ssr: false
+});
 
 export default function Home() {
   const router = useRouter();

@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getSessionUser(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    await ChatModel.repairLegacyAgentKinds();
 
     const workspaceContext = await getRequestWorkspaceContext(req);
     const workspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
@@ -30,6 +31,7 @@ export async function GET(req: NextRequest) {
       SELECT a.*
       FROM ai_agents a
       WHERE a.is_personal = 0
+        AND (a.owner_username IS NULL OR a.owner_username = '')
         AND a.is_active = 1
         AND a.is_public = 1
       ORDER BY a.name ASC

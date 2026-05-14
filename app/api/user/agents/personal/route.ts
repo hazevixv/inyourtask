@@ -12,19 +12,29 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getSessionUser(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    const workspaceContext = await getRequestWorkspaceContext(req);
-    const workspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
+    await ChatModel.repairLegacyAgentKinds();
 
-    const limitInfo = await ChatModel.canCreatePersonalAI(user.username);
     const personalAgents = await query<any[]>(
-      `SELECT * FROM ai_agents WHERE is_personal = 1 AND owner_username = ? ${workspaceId ? 'AND workspace_id = ?' : ''} ORDER BY created_at DESC`,
-      workspaceId ? [user.username, workspaceId] : [user.username]
+      `SELECT *
+       FROM ai_agents
+       WHERE is_personal = 1
+         AND agent_id LIKE 'personal-%'
+         AND owner_username = ?
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [user.username]
     );
+    const limitInfo = {
+      allowed: personalAgents.length === 0,
+      current: personalAgents.length > 0 ? 1 : 0,
+      max: 1,
+      reason: personalAgents.length > 0 ? 'Setiap user hanya memiliki satu Personal AI default.' : undefined,
+    };
 
     return NextResponse.json({
       success: true,
       data: {
-        personalAgents,
+        personalAgent: personalAgents[0] || null,
         limitInfo
       }
     });
@@ -42,6 +52,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getSessionUser(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    await ChatModel.repairLegacyAgentKinds();
     const workspaceContext = await getRequestWorkspaceContext(req);
     const workspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
 
@@ -54,10 +65,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Name and system_prompt are required' }, { status: 400 });
     }
 
-    // Check limit
-    const limitInfo = await ChatModel.canCreatePersonalAI(user.username);
-    if (!limitInfo.allowed) {
-      return NextResponse.json({ success: false, error: limitInfo.reason || 'Batas Personal AI tercapai' }, { status: 403 });
+    const existingPersonalAgent = await query<any[]>(
+      `SELECT agent_id
+       FROM ai_agents
+       WHERE is_personal = 1
+         AND agent_id LIKE 'personal-%'
+         AND owner_username = ?
+       LIMIT 1`,
+      [user.username]
+    );
+    if (existingPersonalAgent[0]) {
+      return NextResponse.json({ success: false, error: 'Personal AI default kamu sudah ada. Setiap user hanya punya satu Personal AI.' }, { status: 409 });
     }
 
     // Check subscription for model restriction
@@ -81,7 +99,7 @@ export async function POST(req: NextRequest) {
     await query(
       `INSERT INTO ai_agents (agent_id, workspace_id, name, description, role, system_prompt, knowledge_base, model, is_personal, owner_username, created_by, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 1)`,
-      [agentId, workspaceId, name, body.description || null, role, systemPrompt, body.knowledge_base || null, model, user.username, user.username]
+      [agentId, null, name, body.description || null, role, systemPrompt, body.knowledge_base || null, model, user.username, user.username]
     );
 
     // Create conversation

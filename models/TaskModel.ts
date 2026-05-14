@@ -3,6 +3,7 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { LogModel } from './LogModel';
 import { ProjectModel } from './ProjectModel';
 import { normalizeCsvList, normalizeOptionalDate, normalizeText } from '@/lib/normalizers';
+import { normalizeTaskPriority } from '@/lib/task-priority';
 
 export interface Task extends RowDataPacket {
   id: number;
@@ -114,7 +115,7 @@ export class TaskModel {
       const brief = normalizeText(data.brief);
       const dueDate = normalizeOptionalDate(data.due_date);
       const status = normalizeText(data.status) || 'Backlog';
-      const priority = normalizeText(data.priority) || 'Normal';
+      const priority = normalizeTaskPriority(normalizeText(data.priority));
       const progress = normalizeText(data.progress) || '0%';
 
       if (!taskName) {
@@ -194,7 +195,7 @@ export class TaskModel {
         project_id: data.project_id !== undefined ? normalizeText(data.project_id) || '' : undefined,
         assignees: data.assignees !== undefined ? normalizeCsvList(data.assignees) || '' : undefined,
         status: data.status !== undefined ? normalizeText(data.status) || '' : undefined,
-        priority: data.priority !== undefined ? normalizeText(data.priority) || '' : undefined,
+        priority: data.priority !== undefined ? normalizeTaskPriority(normalizeText(data.priority)) : undefined,
         progress: data.progress !== undefined ? normalizeText(data.progress) || '' : undefined,
         due_date: data.due_date !== undefined ? normalizeOptionalDate(data.due_date) || '' : undefined,
         notes: data.notes !== undefined ? normalizeText(data.notes) || '' : undefined,

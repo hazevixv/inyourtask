@@ -2,9 +2,8 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import AppShell from '@/components/Sidebar';
-import ViewSystem from '@/components/ViewSystem';
-import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
 import FAB from '@/components/FAB';
 import BottomNav from '@/components/BottomNav';
@@ -14,6 +13,15 @@ import { useApp } from '@/lib/AppContext';
 import { Plus } from 'lucide-react';
 import styles from '@/components/Sidebar.module.css';
 import headerStyles from '@/components/MobileHeader.module.css';
+
+const ViewSystem = dynamic(() => import('@/components/ViewSystem'), {
+  ssr: false,
+  loading: () => <PageLoader />
+});
+
+const Modal = dynamic(() => import('@/components/Modal'), {
+  ssr: false
+});
 
 const PROJECT_FILTERS = [
   { id: 'all', label: 'All' },

@@ -4,6 +4,7 @@ import { query } from '@/lib/db';
 import { requireUser } from '@/lib/api-auth';
 import { hasWorkspaceAdminAccess, isPlatformSuperAdminUser } from '@/lib/workspace-permissions';
 import { getRequestWorkspaceContext, buildWorkspaceEntityScope } from '@/lib/workspace-context';
+import { getCanonicalTaskPriorities, normalizeTaskPriority } from '@/lib/task-priority';
 
 const configCache: Record<string, { ts: number; data: any }> = {};
 const CONFIG_CACHE_TTL = 30_000;
@@ -23,7 +24,7 @@ function buildSafeConfigFallback(user: any, workspaceName?: string | null) {
       team_role: 'owner'
     }],
     status: ['Backlog', 'To Do', 'In Progress', 'In Review', 'Done'],
-    priority: ['Low', 'Normal', 'High', 'Urgent', 'Recurring'],
+    priority: getCanonicalTaskPriorities(),
     progress: ['0%', '25%', '50%', '75%', '100%'],
     categories: [
       { value: 'Development', tag: 'Produk' },
@@ -175,7 +176,7 @@ export async function GET(request: NextRequest) {
 
     defaults = {
       default_status: defaults.default_status || 'Backlog',
-      default_priority: defaults.default_priority || 'Normal',
+      default_priority: normalizeTaskPriority(defaults.default_priority),
       default_progress: defaults.default_progress || '0%',
       default_category: defaults.default_category || 'Development'
     };
@@ -209,7 +210,7 @@ export async function GET(request: NextRequest) {
       data: {
         team: [],
         status: ['Backlog', 'To Do', 'In Progress', 'In Review', 'Done'],
-        priority: ['Low', 'Normal', 'High', 'Urgent', 'Recurring'],
+        priority: getCanonicalTaskPriorities(),
         progress: ['0%', '25%', '50%', '75%', '100%'],
         categories: [
           { value: 'Development', tag: 'Produk' },

@@ -122,7 +122,7 @@ export class AIModel {
   // Auto-generate conversation name from first message
   static async autoGenerateName(conversationId: number): Promise<void> {
     const messages = await query<AIMessage[]>(
-      'SELECT content FROM ai_messages WHERE conversation_id = ? AND role = "user" ORDER BY created_at ASC LIMIT 1',
+      "SELECT content FROM ai_messages WHERE conversation_id = ? AND role = 'user' ORDER BY created_at ASC LIMIT 1",
       [conversationId]
     );
 

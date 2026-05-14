@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
 import AppShell from '@/components/Sidebar';
-import Modal from '@/components/Modal';
 import Toast from '@/components/Toast';
 import BottomNav from '@/components/BottomNav';
 import MobileHeader from '@/components/MobileHeader';
@@ -15,6 +14,10 @@ import { useApp } from '@/lib/AppContext';
 const AIAssistant = dynamicImport(() => import('@/components/AIAssistant'), {
   ssr: false,
   loading: () => <PageLoader />
+});
+
+const Modal = dynamicImport(() => import('@/components/Modal'), {
+  ssr: false
 });
 
 export default function AIAssistantPage() {

@@ -1,6 +1,12 @@
 import { query } from '@/lib/db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { normalizeText } from '@/lib/normalizers';
+import {
+  getCanonicalTaskPriorities,
+  getLegacyTaskPriorityMappings,
+  isCanonicalTaskPriority,
+  normalizeTaskPriority
+} from '@/lib/task-priority';
 
 export interface BrainConfig extends RowDataPacket {
   id: number;
@@ -27,6 +33,9 @@ export class BrainModel {
     default_priority: 'priority',
     default_progress: 'progress'
   } as const;
+
+  private static priorityIntegrityPromise: Promise<void> | null = null;
+  private static lastPriorityIntegrityAt = 0;
 
   private static mapMemberRow(row: any) {
     const sharedUnits = typeof row.shared_units === 'string'
@@ -89,9 +98,136 @@ export class BrainModel {
     return ['status', 'priority', 'progress', 'category'].includes(type);
   }
 
+  private static async ensurePriorityIntegrity() {
+    const now = Date.now();
+    if (this.priorityIntegrityPromise) {
+      await this.priorityIntegrityPromise;
+      return;
+    }
+
+    if (now - this.lastPriorityIntegrityAt < 5 * 60 * 1000) {
+      return;
+    }
+
+    this.priorityIntegrityPromise = (async () => {
+      const canonical = getCanonicalTaskPriorities();
+      const legacyMappings = getLegacyTaskPriorityMappings();
+
+      for (const [legacyValue, mappedValue] of Object.entries(legacyMappings)) {
+        if (canonical.some((item) => item.toLowerCase() === legacyValue.toLowerCase())) {
+          continue;
+        }
+
+        await query<ResultSetHeader>(
+          'UPDATE tasks SET priority = ? WHERE LOWER(priority) = ?',
+          [mappedValue, legacyValue]
+        );
+
+        await query<ResultSetHeader>(
+          'UPDATE brain_defaults SET default_value = ? WHERE default_key = ? AND LOWER(default_value) = ?',
+          [mappedValue, 'default_priority', legacyValue]
+        );
+      }
+
+      const existingRows = await query<BrainConfig[]>(
+        'SELECT id, config_value, display_order, is_active FROM brain_config WHERE config_type = ? ORDER BY display_order ASC, id ASC',
+        ['priority']
+      );
+
+      for (let index = 0; index < canonical.length; index += 1) {
+        const value = canonical[index];
+        const matchingRow = existingRows.find((row) => row.config_value?.toLowerCase() === value.toLowerCase());
+        const displayOrder = index + 1;
+
+        if (matchingRow) {
+          if (!matchingRow.is_active || matchingRow.display_order !== displayOrder || matchingRow.config_value !== value) {
+            await query<ResultSetHeader>(
+              'UPDATE brain_config SET config_value = ?, display_order = ?, is_active = TRUE WHERE id = ?',
+              [value, displayOrder, matchingRow.id]
+            );
+          }
+        } else {
+          await query<ResultSetHeader>(
+            'INSERT INTO brain_config (config_type, config_value, display_order, is_active) VALUES (?, ?, ?, TRUE)',
+            ['priority', value, displayOrder]
+          );
+        }
+      }
+
+      const legacyConfigValues = existingRows
+        .map((row) => row.config_value)
+        .filter((value): value is string => Boolean(value))
+        .filter((value) => !canonical.some((item) => item.toLowerCase() === value.toLowerCase()))
+        .filter((value, index, arr) => arr.findIndex((candidate) => candidate.toLowerCase() === value.toLowerCase()) === index);
+
+      if (legacyConfigValues.length > 0) {
+        await query<ResultSetHeader>(
+          `DELETE FROM brain_config
+           WHERE config_type = ?
+           AND LOWER(config_value) IN (${legacyConfigValues.map(() => '?').join(',')})`,
+          ['priority', ...legacyConfigValues.map((value) => value.toLowerCase())]
+        );
+      }
+
+      const validPriorityList = canonical.map((value) => value.toLowerCase());
+      await query<ResultSetHeader>(
+        `UPDATE tasks
+         SET priority = ?
+         WHERE priority IS NULL OR TRIM(priority) = ''`,
+        ['Normal']
+      );
+
+      const taskPriorityRows = await query<Array<{ priority: string | null }>>(
+        'SELECT DISTINCT priority FROM tasks'
+      );
+
+      for (const row of taskPriorityRows) {
+        const currentValue = row.priority?.trim();
+        if (!currentValue) continue;
+        const normalizedValue = normalizeTaskPriority(currentValue);
+        if (normalizedValue !== currentValue && validPriorityList.includes(normalizedValue.toLowerCase())) {
+          await query<ResultSetHeader>(
+            'UPDATE tasks SET priority = ? WHERE priority = ?',
+            [normalizedValue, currentValue]
+          );
+        }
+      }
+
+      const defaultRows = await query<BrainDefault[]>(
+        'SELECT default_value FROM brain_defaults WHERE default_key = ? LIMIT 1',
+        ['default_priority']
+      );
+
+      if (defaultRows.length === 0) {
+        await query<ResultSetHeader>(
+          'INSERT INTO brain_defaults (default_key, default_value) VALUES (?, ?)',
+          ['default_priority', 'Normal']
+        );
+      } else {
+        const normalizedDefault = normalizeTaskPriority(defaultRows[0].default_value);
+        if (normalizedDefault !== defaultRows[0].default_value) {
+          await query<ResultSetHeader>(
+            'UPDATE brain_defaults SET default_value = ? WHERE default_key = ?',
+            [normalizedDefault, 'default_priority']
+          );
+        }
+      }
+    })()
+      .finally(() => {
+        this.lastPriorityIntegrityAt = Date.now();
+        this.priorityIntegrityPromise = null;
+      });
+
+    await this.priorityIntegrityPromise;
+  }
+
   // Get all config by type. Categories come from brain_config.
   // Team members are derived from users + organizational assignments.
   static async getConfigByType(type: string, username?: string): Promise<any[]> {
+    if (type === 'priority') {
+      await this.ensurePriorityIntegrity();
+    }
+
     if (type === 'category') {
       // Return full objects with tags for categories.
       // Older databases may not have category_tag yet, so fall back safely.
@@ -190,6 +326,20 @@ export class BrainModel {
         'SELECT config_value FROM brain_config WHERE config_type = ? AND is_active = TRUE ORDER BY display_order',
         [type]
       );
+
+      if (type === 'priority') {
+        const canonical = getCanonicalTaskPriorities();
+        const activeValues = new Set(
+          results
+            .map((row) => normalizeTaskPriority(row.config_value, 'Normal'))
+            .filter(Boolean)
+            .map((value) => value.toLowerCase())
+        );
+
+        const ordered = canonical.filter((value) => activeValues.has(value.toLowerCase()));
+        return ordered.length > 0 ? ordered : canonical;
+      }
+
       return results.map(r => r.config_value);
     }
   }
@@ -238,6 +388,10 @@ export class BrainModel {
         return { success: false, error: 'Value is required' };
       }
 
+      if (type === 'priority' && !isCanonicalTaskPriority(normalizedValue)) {
+        return { success: false, error: `Priority must be one of: ${getCanonicalTaskPriorities().join(', ')}` };
+      }
+
       // Validate tag for categories
       const validTags = ['Perusahaan', 'Unit Bisnis', 'Brand', 'Produk', 'Lainnya'];
       const categoryTag = type === 'category' && tag ? (validTags.includes(tag) ? tag : 'Lainnya') : null;
@@ -277,10 +431,16 @@ export class BrainModel {
       }
 
       const normalizedOldValue = normalizeText(oldValue);
-      const normalizedNewValue = normalizeText(newValue);
+      const normalizedNewValue = type === 'priority'
+        ? normalizeTaskPriority(normalizeText(newValue))
+        : normalizeText(newValue);
 
       if (!normalizedOldValue || !normalizedNewValue) {
         return { success: false, error: 'Value is required' };
+      }
+
+      if (type === 'priority' && !isCanonicalTaskPriority(normalizedNewValue)) {
+        return { success: false, error: `Priority must be one of: ${getCanonicalTaskPriorities().join(', ')}` };
       }
 
       // Validate tag for categories
@@ -428,7 +588,9 @@ export class BrainModel {
         return { success: false, error: 'Invalid default key' };
       }
 
-      const normalizedValue = normalizeText(value);
+      const normalizedValue = key === 'default_priority'
+        ? normalizeTaskPriority(normalizeText(value))
+        : normalizeText(value);
       if (!normalizedValue) {
         return { success: false, error: 'Default value is required' };
       }

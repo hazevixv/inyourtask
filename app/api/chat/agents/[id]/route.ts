@@ -9,21 +9,23 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   try {
     const user = await getSessionUser(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    await ChatModel.repairLegacyAgentKinds();
     const workspaceContext = await getRequestWorkspaceContext(req);
     const activeWorkspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
     const agent = await ChatModel.getAgentById(params.id);
     if (!agent) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+    const agentKind = ChatModel.getAgentKind(agent);
 
     // Admin and superadmin can see any agent
     if (!isPlatformSuperAdminUser(user as any) && !hasWorkspaceAdminAccess(user as any, workspaceContext.activeWorkspace)) {
       const availableWorkerAgents = await ChatModel.getAvailableWorkerAgents(user.username, activeWorkspaceId);
-      const visible = (agent.is_personal === 1 && agent.owner_username === user.username)
+      const visible = ((agentKind === 'personal' || agentKind === 'custom') && agent.owner_username === user.username)
         || availableWorkerAgents.some((item: any) => item.agent_id === params.id);
       if (!visible) {
         return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
       }
     }
-    return NextResponse.json({ success: true, agent });
+    return NextResponse.json({ success: true, agent: { ...agent, agent_kind: agentKind } });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
@@ -33,6 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   try {
     const user = await getSessionUser(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    await ChatModel.repairLegacyAgentKinds();
     const workspaceContext = await getRequestWorkspaceContext(req);
     const activeWorkspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
     const isSuperAdmin = isPlatformSuperAdminUser(user as any);
@@ -40,16 +43,17 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const agent = await query<any[]>('SELECT * FROM ai_agents WHERE agent_id = ?', [params.id]);
     if (!agent[0]) return NextResponse.json({ success: false, error: 'Agent not found' }, { status: 404 });
 
-    const isPersonal = agent[0].is_personal === 1;
+    const agentKind = ChatModel.getAgentKind(agent[0]);
     const isOwner = agent[0].owner_username === user.username || agent[0].created_by === user.username;
     const isAdmin = hasWorkspaceAdminAccess(user as any, workspaceContext.activeWorkspace);
 
-    // Permission matrix:
-    // - Personal AI: owner or admin can edit
-    // - Worker AI: only superadmin can edit
-    if (isPersonal) {
-      if (!isOwner && !isAdmin && !isSuperAdmin) {
+    if (agentKind === 'personal') {
+      if (!isOwner && !isSuperAdmin) {
         return NextResponse.json({ success: false, error: 'You can only edit your own Personal AI' }, { status: 403 });
+      }
+    } else if (agentKind === 'custom') {
+      if (!isOwner && !isAdmin && !isSuperAdmin) {
+        return NextResponse.json({ success: false, error: 'You can only edit your own User AI Agent' }, { status: 403 });
       }
     } else {
       if (!isSuperAdmin) {
@@ -69,6 +73,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   try {
     const user = await getSessionUser(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    await ChatModel.repairLegacyAgentKinds();
     const workspaceContext = await getRequestWorkspaceContext(req);
     const activeWorkspaceId = workspaceContext.activeWorkspace?.workspace_id || null;
     const isSuperAdmin = isPlatformSuperAdminUser(user as any);
@@ -76,16 +81,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const agent = await query<any[]>('SELECT * FROM ai_agents WHERE agent_id = ?', [params.id]);
     if (!agent[0]) return NextResponse.json({ success: false, error: 'Agent not found' }, { status: 404 });
 
-    const isPersonal = agent[0].is_personal === 1;
+    const agentKind = ChatModel.getAgentKind(agent[0]);
     const isOwner = agent[0].owner_username === user.username || agent[0].created_by === user.username;
     const isAdmin = hasWorkspaceAdminAccess(user as any, workspaceContext.activeWorkspace);
 
-    // Permission matrix:
-    // - Personal AI: owner or admin can delete
-    // - Worker AI: only superadmin can delete
-    if (isPersonal) {
-      if (!isOwner && !isAdmin && !isSuperAdmin) {
+    if (agentKind === 'personal') {
+      if (!isOwner && !isSuperAdmin) {
         return NextResponse.json({ success: false, error: 'You can only delete your own Personal AI' }, { status: 403 });
+      }
+    } else if (agentKind === 'custom') {
+      if (!isOwner && !isAdmin && !isSuperAdmin) {
+        return NextResponse.json({ success: false, error: 'You can only delete your own User AI Agent' }, { status: 403 });
       }
     } else {
       if (!isSuperAdmin) {

@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getSessionUser(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    await ChatModel.repairLegacyAgentKinds();
     const { memberUsernames, activeWorkspace } = await getRequestWorkspaceContext(req);
     const workspaceId = activeWorkspace?.workspace_id || null;
 
@@ -24,8 +25,13 @@ export async function POST(req: NextRequest) {
     }
 
     const existingPersonalAgents = await query<any[]>(
-      'SELECT * FROM ai_agents WHERE is_personal = 1 AND owner_username = ? AND workspace_id = ? LIMIT 1',
-      [user.username, workspaceId]
+      `SELECT *
+       FROM ai_agents
+       WHERE is_personal = 1
+         AND agent_id LIKE 'personal-%'
+         AND owner_username = ?
+       LIMIT 1`,
+      [user.username]
     );
 
     let personalAgent = existingPersonalAgents[0] || null;
@@ -69,7 +75,7 @@ Ingat: Kamu adalah asisten EKSKLUSIF untuk ${firstName}. Prioritas utamamu adala
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           agentId,
-          workspaceId,
+          null,
           `${firstName}'s AI`,
           `Asisten personal eksklusif untuk ${user.full_name || user.username}`,
           'Personal Assistant',
@@ -95,27 +101,6 @@ Ingat: Kamu adalah asisten EKSKLUSIF untuk ${firstName}. Prioritas utamamu adala
         `Halo ${firstName}! Saya adalah asisten AI personal kamu. Saya akan mengingat preferensi dan konteks percakapan kita. Apa yang bisa saya bantu hari ini?`,
         'ai'
       );
-    }
-
-    const availableWorkerAgents = await ChatModel.getAvailableWorkerAgents(user.username, workspaceId);
-    const fallbackWorkerAgents = await query<any[]>(`
-      SELECT a.agent_id
-      FROM ai_agents a
-      WHERE a.is_personal = 0
-        AND a.is_active = 1
-        AND a.is_public = 1
-    `, []);
-    const workerAgentIds = Array.from(new Set([
-      ...availableWorkerAgents.map((a: any) => a.agent_id),
-      ...fallbackWorkerAgents.map((a: any) => a.agent_id)
-    ]));
-
-    for (const agentId of workerAgentIds) {
-      try {
-        await ChatModel.createAIAgentConversation(user.username, agentId, false, workspaceId);
-      } catch {
-        // ignore duplicates
-      }
     }
 
     const userOrgUnits = await query<any[]>(`
